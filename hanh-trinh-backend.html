@@ -1,0 +1,1646 @@
+<title>Hành trình Backend</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: left rail navigation + main workspace; map = topic regions laid as trails of lesson stations. */
+:root{
+  --bg:#EDF1F3; --surface:#FFFFFF; --surface2:#F5F8F9; --fg:#14202B; --muted:#5A6A77; --line:#D6DFE4;
+  --accent:#0C7A84; --accent-soft:#DDF1F2; --accent-ink:#FFFFFF; --xp:#B86E0B; --xp-soft:#FBEBD3;
+  --good:#1E8449; --good-soft:#E0F3E8; --bad:#BC3A33; --bad-soft:#FBE4E2; --shadow:0 1px 2px rgba(20,32,43,.06),0 4px 14px rgba(20,32,43,.05);
+  --r1:#2D68D2; --r2:#0C7A84; --r3:#7449C9; --r4:#AE4F2C; --r5:#25875A; --r6:#B47309; --r7:#4D6274; --r8:#9C3770;
+  --f-ui:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --rad:12px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D141A; --surface:#141D25; --surface2:#1A252F; --fg:#E2E9EE; --muted:#92A2AF; --line:#25323D;
+  --accent:#4CC0C8; --accent-soft:#143338; --accent-ink:#06191B; --xp:#F0AF48; --xp-soft:#3A2A10;
+  --good:#5BC98A; --good-soft:#123222; --bad:#F07A72; --bad-soft:#3A1715; --shadow:0 1px 2px rgba(0,0,0,.3);
+  --r1:#7AA6F2; --r2:#4CC0C8; --r3:#AA8AEB; --r4:#E58A66; --r5:#5BC98A; --r6:#EAB04F; --r7:#9AB0C2; --r8:#E07BB2; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D141A; --surface:#141D25; --surface2:#1A252F; --fg:#E2E9EE; --muted:#92A2AF; --line:#25323D;
+  --accent:#4CC0C8; --accent-soft:#143338; --accent-ink:#06191B; --xp:#F0AF48; --xp-soft:#3A2A10;
+  --good:#5BC98A; --good-soft:#123222; --bad:#F07A72; --bad-soft:#3A1715; --shadow:0 1px 2px rgba(0,0,0,.3);
+  --r1:#7AA6F2; --r2:#4CC0C8; --r3:#AA8AEB; --r4:#E58A66; --r5:#5BC98A; --r6:#EAB04F; --r7:#9AB0C2; --r8:#E07BB2; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:15px;line-height:1.55}
+button{font:inherit;color:inherit}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100%}
+/* rail */
+.rail{position:sticky;top:0;height:100vh;overflow:auto;background:var(--surface);border-right:1px solid var(--line);
+  padding:18px 12px 16px max(12px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:2px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;letter-spacing:-.01em;padding:4px 10px 14px;text-decoration:none;color:var(--fg)}
+.brand-mark{width:28px;height:28px;border-radius:8px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--f-mono);font-size:13px;font-weight:600}
+.rail-h{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:14px 10px 4px}
+.nav{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;text-decoration:none;color:var(--fg);font-size:14px;font-weight:500}
+.nav:hover{background:var(--surface2)}
+.nav[aria-current="page"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.nav svg{width:18px;height:18px;flex:none}
+.nav .count{margin-left:auto;font-size:11px;font-weight:700;background:var(--xp);color:var(--surface);border-radius:999px;padding:1px 7px}
+.lvl{margin-top:auto;border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:6px;font-size:13px}
+.lvl-top{display:flex;justify-content:space-between;align-items:center;font-weight:600}
+.lvl-top span:last-child{color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:999px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--xp);border-radius:999px;transition:width .4s}
+/* top */
+.main{min-width:0;display:flex;flex-direction:column}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;align-items:center;gap:12px;padding:12px max(20px,env(safe-area-inset-right,0px)) 12px 24px;
+  background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top h1{font-size:17px;margin:0;font-weight:700;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.searchbtn{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:7px 10px;cursor:pointer;color:var(--muted);font-size:13px;min-width:200px}
+.searchbtn kbd{margin-left:auto;font-family:var(--f-mono);font-size:11px;border:1px solid var(--line);border-radius:5px;padding:0 5px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.pill svg{width:16px;height:16px}
+.view{padding:24px max(24px,env(safe-area-inset-right,0px)) 48px 24px;max-width:1160px;width:100%}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+/* mobile nav */
+.mnav{display:none}
+@media (max-width:900px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .rail{display:none}
+  .mnav{display:flex;gap:6px;overflow-x:auto;padding:8px max(16px,env(safe-area-inset-right,0px)) 10px max(16px,env(safe-area-inset-left,0px));border-bottom:1px solid var(--line);background:var(--surface);scrollbar-width:none}
+  .mnav a{flex:none;text-decoration:none;color:var(--fg);font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;border:1px solid var(--line)}
+  .mnav a[aria-current="page"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  .top{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .searchbtn{min-width:0}.searchbtn .lbl,.searchbtn kbd{display:none}
+  .view{padding:18px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px))}
+}
+/* common blocks */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--rad);box-shadow:var(--shadow)}
+.pad{padding:18px 20px}
+.h-sec{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:28px 0 12px}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:900px){.g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.g2,.g3,.g4{grid-template-columns:minmax(0,1fr)}}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:9px 14px;font-weight:600;font-size:14px;cursor:pointer;text-decoration:none;color:var(--fg)}
+.btn:hover{border-color:var(--muted)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.pri:hover{filter:brightness(1.06)}
+.btn.sm{padding:6px 10px;font-size:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn svg{width:16px;height:16px}
+.muted{color:var(--muted)}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--surface2);border:1px solid var(--line);color:var(--muted)}
+.tag .dot{width:8px;height:8px;border-radius:50%}
+.mono{font-family:var(--f-mono)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;color:var(--fg);display:inline-flex;align-items:center;gap:7px}
+.chip:hover{border-color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--surface);border-color:var(--fg)}
+.chip .dot{width:8px;height:8px;border-radius:50%}
+/* home */
+.hero{padding:26px 28px;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px;align-items:center;position:relative;overflow:hidden}
+.hero h2{font-size:clamp(26px,3.4vw,38px);line-height:1.1;margin:0 0 10px;font-weight:800;letter-spacing:-.02em;text-wrap:balance}
+.hero h2 em{font-style:normal;color:var(--accent)}
+.hero p{margin:0 0 18px;color:var(--muted);max-width:52ch}
+.hero-flow{font-family:var(--f-mono);font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:flex-end}
+.hero-flow span{border:1px solid var(--line);border-radius:6px;padding:3px 7px;background:var(--surface2);color:var(--fg)}
+@media (max-width:760px){.hero{grid-template-columns:minmax(0,1fr)}.hero-flow{justify-content:flex-start}}
+.stat{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px}
+.stat .k{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.stat .v{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+.stat .v small{font-size:14px;color:var(--muted);font-weight:500}
+.ring{--p:0;width:52px;height:52px;border-radius:50%;flex:none;background:conic-gradient(var(--c,var(--accent)) calc(var(--p)*1%),var(--line) 0);display:grid;place-items:center}
+.ring::after{content:attr(data-l);width:42px;height:42px;border-radius:50%;background:var(--surface);display:grid;place-items:center;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums}
+.task{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line);text-decoration:none;color:var(--fg)}
+.task:first-of-type{border-top:0}
+.task .ic{width:34px;height:34px;border-radius:9px;background:var(--surface2);display:grid;place-items:center;flex:none}
+.task .ic svg{width:18px;height:18px}
+.task b{display:block;font-size:14px}.task small{color:var(--muted)}
+.week{display:flex;gap:6px;margin-top:12px}
+.week span{flex:1;text-align:center;font-size:11px;color:var(--muted);border-radius:8px;padding:6px 0;background:var(--surface2)}
+.week span.on{background:var(--xp-soft);color:var(--xp);font-weight:700}
+/* map */
+.jump{position:sticky;top:calc(env(safe-area-inset-top,0px) + 58px);z-index:3;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);padding:8px 0 12px;margin:-8px 0 8px}
+@media (max-width:900px){.jump{top:calc(env(safe-area-inset-top,0px) + 54px)}}
+.region{padding:20px 22px 8px;margin-bottom:16px;scroll-margin-top:130px}
+.region-h{display:flex;gap:14px;align-items:flex-start}
+.region-ic{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;color:#fff;flex:none}
+.region-ic svg{width:20px;height:20px}
+.region-h h3{margin:0;font-size:18px;font-weight:700}
+.region-h p{margin:2px 0 0;color:var(--muted);font-size:14px}
+.region-prog{margin-left:auto;text-align:right;font-size:12px;color:var(--muted);min-width:110px;font-variant-numeric:tabular-nums}
+.region-prog .bar{margin-top:6px}
+.region-prog .bar i{background:var(--rc)}
+.trail{display:flex;gap:0;overflow-x:auto;padding:22px 4px 16px;scrollbar-width:thin}
+.stn{flex:0 0 156px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;text-decoration:none;color:var(--fg);position:relative}
+.stn::before{content:"";position:absolute;top:30px;left:-50%;width:100%;border-top:2px dashed var(--line);z-index:0}
+.stn:first-child::before{display:none}
+.stn.done::before{border-top-color:var(--rc)}
+.stn .node{width:60px;height:60px;border-radius:16px;background:var(--surface);border:2px solid var(--line);display:grid;place-items:center;position:relative;z-index:1;transition:transform .15s}
+.stn:hover .node{transform:translateY(-2px);border-color:var(--rc)}
+.stn .node svg{width:24px;height:24px;color:var(--rc)}
+.stn.done .node{background:var(--rc);border-color:var(--rc)}
+.stn.done .node svg{color:#fff}
+.stn .ok{position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;background:var(--good);color:#fff;display:grid;place-items:center;font-size:12px;border:2px solid var(--surface)}
+.stn .lbl{font-size:13px;font-weight:600;line-height:1.3;padding:0 6px}
+.stn .meta{font-size:11px;color:var(--muted)}
+.stn.next .node{box-shadow:0 0 0 5px color-mix(in srgb,var(--rc) 22%,transparent)}
+/* lesson */
+.les-head{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin-bottom:6px}
+.les-title{font-size:clamp(24px,3vw,32px);font-weight:800;letter-spacing:-.015em;margin:4px 0 6px;text-wrap:balance;line-height:1.15}
+.les-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.les-grid{grid-template-columns:minmax(0,1fr)}}
+.side{position:sticky;top:76px;display:grid;gap:14px}
+@media (max-width:980px){.side{position:static}}
+.callout{border-left:4px solid var(--rc,var(--accent));background:var(--surface2);border-radius:8px;padding:12px 14px;margin:0}
+.callout.proj{border-left-color:var(--xp);background:var(--xp-soft)}
+.callout b{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;color:var(--muted)}
+.points{margin:0;padding-left:20px;display:grid;gap:9px}
+.points li::marker{color:var(--rc,var(--accent))}
+.pits{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.pits li{padding:8px 12px;border-radius:8px;background:var(--bad-soft);font-size:14px}
+.pits li::before{content:"Bẫy · ";font-weight:700;color:var(--bad)}
+details.iv{border:1px solid var(--line);border-radius:10px;background:var(--surface);margin-bottom:10px}
+details.iv summary{cursor:pointer;padding:12px 14px;font-weight:600;list-style:none;display:flex;gap:10px}
+details.iv summary::-webkit-details-marker{display:none}
+details.iv summary::before{content:"Hỏi";font-size:11px;font-weight:700;color:var(--r3);background:color-mix(in srgb,var(--r3) 14%,transparent);border-radius:6px;padding:2px 7px;height:fit-content;flex:none;margin-top:1px}
+details.iv[open] summary{border-bottom:1px dashed var(--line)}
+details.iv .ans{padding:12px 14px;font-size:14.5px}
+/* flow diagram */
+.flow{display:flex;flex-direction:column;gap:0;padding:6px 0}
+.fnode{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;position:relative;padding-bottom:14px}
+.fnode:last-child{padding-bottom:0}
+.fnode::before{content:"";position:absolute;left:13px;top:28px;bottom:0;border-left:2px solid color-mix(in srgb,var(--rc) 40%,var(--line))}
+.fnode:last-child::before{display:none}
+.fnum{width:28px;height:28px;border-radius:8px;background:var(--rc);color:#fff;display:grid;place-items:center;font-family:var(--f-mono);font-size:12px;font-weight:600;z-index:1}
+.fbox b{display:block;font-size:14px;line-height:1.3;margin-top:3px}
+.fbox span{font-size:12.5px;color:var(--muted);font-family:var(--f-mono)}
+/* quiz */
+.q{padding:16px 18px;border-top:1px solid var(--line)}
+.q:first-child{border-top:0}
+.q p{margin:0 0 10px;font-weight:600}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:9px 12px;cursor:pointer;font-size:14px;display:flex;gap:10px;align-items:flex-start}
+.opt:hover:not(:disabled){border-color:var(--muted)}
+.opt .lt{font-family:var(--f-mono);font-size:12px;color:var(--muted);width:16px;flex:none;margin-top:2px}
+.opt.right{border-color:var(--good);background:var(--good-soft)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+.opt:disabled{cursor:default}
+.why{margin-top:10px;font-size:14px;padding:9px 12px;border-radius:8px;background:var(--surface2)}
+/* labs */
+.labcard{display:flex;flex-direction:column;gap:8px;padding:16px 18px;text-decoration:none;color:var(--fg);transition:border-color .15s}
+.labcard:hover{border-color:var(--muted)}
+.labcard .ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:var(--surface2)}
+.labcard .ic svg{width:20px;height:20px;color:var(--rc)}
+.labcard h4{margin:4px 0 0;font-size:15px}
+.labcard p{margin:0;color:var(--muted);font-size:13.5px;flex:1}
+.labcard .ft{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.lab-wrap{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.lab-wrap{grid-template-columns:minmax(0,1fr)}}
+.ctl{display:grid;gap:14px}
+.ctl label,.fl{display:grid;gap:6px;font-size:13px;font-weight:600}
+.ctl select,.ctl input[type=number]{font:inherit;font-size:14px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);width:100%}
+.ctl input[type=range]{width:100%;accent-color:var(--accent)}
+.ctl .row{display:flex;gap:8px;align-items:center;font-weight:500}
+.ctl .row input{accent-color:var(--accent);width:16px;height:16px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 10px;font-size:13px;font-weight:600;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--surface);border-color:var(--fg)}
+.layers{display:grid;gap:6px}
+.layer{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 12px;border-radius:9px;border:1px solid var(--line);background:var(--surface);transition:all .25s}
+.layer .n{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.layer b{font-size:14px}.layer small{display:block;color:var(--muted);font-size:12.5px}
+.layer.pass{border-color:var(--good);background:var(--good-soft)}
+.layer.stop{border-color:var(--bad);background:var(--bad-soft)}
+.layer.cur{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.layer.skip{opacity:.4}
+.res{border-radius:10px;padding:14px 16px;font-size:14.5px}
+.res.ok{background:var(--good-soft);border:1px solid var(--good)}
+.res.no{background:var(--bad-soft);border:1px solid var(--bad)}
+.res.info{background:var(--surface2);border:1px solid var(--line)}
+.res b.code{font-family:var(--f-mono);font-size:18px;display:block;margin-bottom:4px}
+.tubes{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:560px){.tubes{grid-template-columns:minmax(0,1fr)}}
+.tube{border:2px solid var(--line);border-radius:14px;padding:12px 14px;min-height:110px;background:var(--surface2)}
+.tube h5{margin:0 0 8px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tube.ok{border-color:var(--good)}.tube.no{border-color:var(--bad)}.tube.none{border-style:dashed;opacity:.6}
+.bead{display:inline-flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:13px;padding:4px 10px;border-radius:999px;margin:0 6px 6px 0;border:1px solid var(--line);background:var(--surface)}
+.bead.ok{border-color:var(--good);color:var(--good)}.bead.no{border-color:var(--bad);color:var(--bad);text-decoration:line-through}
+.log{font-family:var(--f-mono);font-size:12.5px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:12px;max-height:320px;overflow:auto;white-space:pre-wrap;line-height:1.6}
+.log .e{color:var(--bad)}.log .s{color:var(--good)}.log .w{color:var(--xp)}
+.caps{display:grid;gap:10px}
+.cap{display:grid;grid-template-columns:150px minmax(0,1fr) 92px;gap:10px;align-items:center;font-size:13px}
+@media (max-width:560px){.cap{grid-template-columns:110px minmax(0,1fr) 78px}}
+.cap .track{height:12px;background:var(--line);border-radius:999px;overflow:hidden}
+.cap .track i{display:block;height:100%;background:var(--accent);border-radius:999px}
+.cap.min .track i{background:var(--bad)}
+.cap .val{font-family:var(--f-mono);text-align:right;font-variant-numeric:tabular-nums}
+.tl{position:relative;height:46px;border-radius:8px;background:var(--surface2);border:1px solid var(--line);overflow:hidden}
+.tl .seg-ok{position:absolute;top:0;bottom:0;background:var(--good-soft)}
+.tl .seg-bad{position:absolute;top:0;bottom:0;background:var(--bad-soft);border-left:2px solid var(--bad)}
+.tl .mk{position:absolute;top:0;bottom:0;border-left:2px dashed var(--fg)}
+.tl .mk span{position:absolute;top:4px;left:4px;font-size:11px;font-family:var(--f-mono);white-space:nowrap}
+.tl-ax{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:11px;color:var(--muted);margin-top:4px}
+.lanes{display:grid;gap:8px}
+.lane{display:grid;grid-template-columns:120px minmax(0,1fr);gap:10px;align-items:start;font-size:13px}
+.lane>b{padding-top:6px}
+.steps{display:flex;flex-wrap:wrap;gap:6px}
+.st{font-size:12.5px;padding:5px 9px;border-radius:7px;border:1px solid var(--line);background:var(--surface)}
+.st.hl{border-color:var(--accent);background:var(--accent-soft)}
+.st.badst{border-color:var(--bad);background:var(--bad-soft)}
+/* reference */
+.gl{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.term{padding:14px 16px;display:grid;gap:6px;text-decoration:none;color:var(--fg)}
+.term b{font-size:15px}.term p{margin:0;font-size:13.5px;color:var(--muted)}
+.term .ft{display:flex;justify-content:space-between;align-items:center;font-size:12px}
+input.search{font:inherit;width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font-size:15px}
+/* roadmap */
+.wk{display:grid;grid-template-columns:72px minmax(0,1fr);gap:16px;padding:18px 20px;border-top:1px solid var(--line)}
+.wk:first-child{border-top:0}
+.wk .num{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.wk .num b{display:block;font-size:26px;color:var(--fg);font-family:var(--f-ui);font-weight:800;line-height:1}
+.wk h4{margin:0 0 4px;font-size:16px}
+.wk p{margin:0 0 8px;color:var(--muted);font-size:14px}
+.wk .out{font-size:13.5px;margin-top:8px}
+.wk .out b{color:var(--xp)}
+.wk.cur{background:var(--accent-soft)}
+/* cards */
+.flash{min-height:240px;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:28px;text-align:left;cursor:pointer;border:1px solid var(--line)}
+.flash .side-l{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.flash .fq{font-size:20px;font-weight:700;line-height:1.35;text-wrap:balance}
+.flash .fa{font-size:15.5px;line-height:1.65}
+/* exam */
+.qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(34px,1fr));gap:6px}
+.qgrid button{height:34px;border-radius:7px;border:1px solid var(--line);background:var(--surface);font-family:var(--f-mono);font-size:12px;cursor:pointer}
+.qgrid button.ans{background:var(--accent-soft);border-color:var(--accent)}
+.qgrid button.cur{outline:2px solid var(--fg)}
+.qgrid button.flag{border-color:var(--xp);background:var(--xp-soft)}
+.timer{font-family:var(--f-mono);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
+/* search modal */
+.modal{position:fixed;inset:0;z-index:30;background:rgba(10,16,22,.45);display:flex;align-items:flex-start;justify-content:center;
+  padding:calc(env(safe-area-inset-top,0px) + 70px) max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px))}
+.modal .box{width:min(620px,100%);max-height:70vh;display:flex;flex-direction:column;overflow:hidden}
+.modal .box input{border:0;border-bottom:1px solid var(--line);border-radius:0;padding:16px 18px;font-size:16px}
+.sres{overflow:auto;padding:6px}
+.sres a{display:flex;gap:10px;align-items:center;padding:9px 12px;border-radius:8px;text-decoration:none;color:var(--fg);font-size:14px}
+.sres a:hover,.sres a.on{background:var(--surface2)}
+.sres a small{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
+.toast{position:fixed;z-index:40;right:max(20px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--surface);padding:10px 16px;border-radius:10px;font-weight:600;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.2);animation:up .3s}
+@keyframes up{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+<div class="app">
+  <nav class="rail" id="rail" aria-label="Điều hướng chính"></nav>
+  <div class="main">
+    <header class="top">
+      <h1 id="pageTitle">Trang chủ</h1>
+      <button class="searchbtn" id="sbtn" type="button" aria-label="Tìm kiếm"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span class="lbl">Tìm bài, thuật ngữ, lab</span><kbd>⌘K</kbd></button>
+      <span class="pill" id="streakPill" style="color:var(--xp)" title="Chuỗi ngày học"></span>
+      <span class="pill" id="xpPill" title="Tổng XP"></span>
+    </header>
+    <nav class="mnav" id="mnav" aria-label="Điều hướng"></nav>
+    <main class="view" id="view"></main>
+  </div>
+</div>
+<script>
+const REGIONS = [
+  {id:"http", name:"Nền móng HTTP", tag:"HTTP, REST và cách thiết kế API đúng chuẩn", icon:"globe", hue:"var(--r1)"},
+  {id:"request", name:"Hành trình một request", tag:"Dữ liệu đi từ client tới DB và quay về như thế nào", icon:"route", hue:"var(--r2)"},
+  {id:"security", name:"Bảo mật và danh tính", tag:"Xác thực, phân quyền, JWT, nhiều tenant", icon:"shield", hue:"var(--r3)"},
+  {id:"data", name:"Dữ liệu và giao dịch", tag:"Transaction, khóa, index, N+1, EAV", icon:"db", hue:"var(--r4)"},
+  {id:"perf", name:"Hiệu năng và đồng thời", tag:"Thread, virtual thread, pool, cache, đo đạc", icon:"gauge", hue:"var(--r5)"},
+  {id:"async", name:"Giao tiếp bất đồng bộ", tag:"RabbitMQ, lỗi consumer, retry, DLQ, outbox", icon:"queue", hue:"var(--r6)"},
+  {id:"ops", name:"Vận hành và sự cố", tag:"Môi trường, Kubernetes, quan sát, chịu lỗi", icon:"server", hue:"var(--r7)"},
+  {id:"design", name:"Thiết kế hệ thống", tag:"Khung tư duy và các bài thiết kế thực tế", icon:"summit", hue:"var(--r8)"}
+];
+
+const LESSONS = [
+/* ================= HTTP ================= */
+{id:"http-basics", r:"http", title:"Giải phẫu một HTTP request", min:8,
+ problem:"Mọi API đều là trao đổi HTTP. Không hiểu một request gồm những phần nào thì rất khó giải thích dữ liệu đi vào backend ra sao.",
+ flow:[{t:"Method + URL",d:"GET /api/students?page=2"},{t:"Header",d:"Authorization, Content-Type, Accept"},{t:"Body",d:"JSON, chỉ có ở POST/PUT/PATCH"},{t:"Server xử lý",d:"đọc từng phần"},{t:"Response",d:"status + header + body"}],
+ points:[
+  "Một request gồm: method (GET, POST...), URL (đường dẫn + query string), header (metadata như token, kiểu dữ liệu) và body (dữ liệu gửi kèm, thường là JSON).",
+  "HTTP là stateless: server không nhớ request trước. Mọi thứ cần để xử lý (ai đang gọi, tenant nào) phải nằm trong chính request, ví dụ JWT trong header Authorization.",
+  "Status code chia 5 nhóm: 1xx thông tin, 2xx thành công, 3xx chuyển hướng, 4xx lỗi phía client, 5xx lỗi phía server.",
+  "Hay dùng: 200 OK, 201 Created, 204 No Content, 400 Bad Request, 401 Unauthorized (chưa xác thực), 403 Forbidden (đã xác thực nhưng không có quyền), 404, 409 Conflict, 422, 500, 503.",
+  "Content-Type cho server biết body là gì (application/json). Accept cho server biết client muốn nhận về dạng gì."
+ ],
+ pitfalls:["Nhầm 401 và 403: 401 là chưa biết bạn là ai, 403 là biết rồi nhưng không cho.","Trả 200 kèm {\"error\":...} trong body làm client và công cụ giám sát không nhận ra lỗi.","Đặt dữ liệu nhạy cảm vào query string: URL bị ghi vào log, lịch sử trình duyệt, proxy."],
+ iv:[{q:"401 và 403 khác nhau thế nào?",a:"401 nghĩa là request chưa được xác thực: thiếu token hoặc token sai, hết hạn. 403 nghĩa là đã biết người gọi là ai nhưng họ không có quyền với tài nguyên đó."},
+     {q:"HTTP stateless nghĩa là gì, ảnh hưởng gì tới thiết kế?",a:"Server không giữ trạng thái giữa các request. Mỗi request phải tự mang đủ thông tin, thường là token. Nhờ vậy có thể chạy nhiều instance phía sau load balancer mà request nào đến instance nào cũng xử lý được."}],
+ project:"Trong hệ thống trường học, mỗi request từ FE mang JWT ở header Authorization. Gateway đọc token đó chứ không nhớ phiên đăng nhập. Đó là lý do có thể chạy nhiều pod.",
+ rel:["rest-design","request-lifecycle","jwt"],
+ quiz:[{q:"Người dùng đã đăng nhập nhưng gọi API xóa học sinh khi không có quyền. Trả mã nào?",o:["401","403","404","400"],a:1,w:"Đã xác thực (biết là ai) nhưng không có quyền → 403."},
+       {q:"Phần nào của request nên chứa JWT?",o:["Query string","Header Authorization","Path variable","Cookie bắt buộc"],a:1,w:"Chuẩn là header Authorization: Bearer <token>. Query string bị ghi log."}]},
+
+{id:"rest-design", r:"http", title:"Thiết kế REST đúng chuẩn", min:10,
+ problem:"Người phỏng vấn nói hệ thống \"lệch chuẩn\" khi search dùng POST. Cần biết chuẩn REST là gì, và khi nào phá lệ là chấp nhận được.",
+ flow:[{t:"Danh từ",d:"/students, /classes/{id}"},{t:"Method",d:"GET đọc, POST tạo..."},{t:"Status",d:"201, 204, 404, 409"},{t:"Đặc tính",d:"safe, idempotent"},{t:"Ngoại lệ",d:"POST /search khi bộ lọc phức tạp"}],
+ points:[
+  "URL là danh từ chỉ tài nguyên, số nhiều: /students, /students/42, /classes/7/students. Hành động thể hiện bằng method, không viết /getStudents.",
+  "GET đọc, POST tạo mới, PUT thay toàn bộ, PATCH sửa một phần, DELETE xóa.",
+  "Safe: không làm đổi dữ liệu (GET, HEAD). Idempotent: gọi nhiều lần cho cùng kết quả (GET, PUT, DELETE). POST không idempotent: gọi hai lần có thể tạo hai bản ghi.",
+  "Tìm kiếm là thao tác đọc nên chuẩn là GET + query param. Lợi ích: cache được, lưu được thành link, nhìn method là biết không đổi dữ liệu.",
+  "POST /search là ngoại lệ được chấp nhận rộng rãi khi bộ lọc là JSON lồng phức tạp, URL quá dài, hoặc dữ liệu lọc nhạy cảm. Elasticsearch có API _search nhận POST. IETF đang soạn thảo method QUERY (an toàn nhưng có body) cho đúng trường hợp này."
+ ],
+ pitfalls:["Dùng POST cho mọi thứ: mất ngữ nghĩa, mất cache.","Động từ trong URL: /deleteStudent?id=1.","Trả 200 cho tạo mới thay vì 201 kèm header Location."],
+ iv:[{q:"Vì sao search dùng POST bị coi là lệch chuẩn? Hệ thống em dùng POST thì bảo vệ thế nào?",a:"Theo REST, tìm kiếm là đọc nên dùng GET: an toàn, cache được, chia sẻ được link. Hệ thống em dùng POST /search vì bộ lọc trên EAV là JSON động lồng nhiều điều kiện, đưa lên URL quá dài và khó đọc. Nếu thiết kế lại, em dùng GET cho tìm kiếm đơn giản và giữ POST /search cho tìm kiếm phức tạp, đặt tên rõ để người đọc biết đó là thao tác đọc."},
+     {q:"PUT và PATCH khác nhau thế nào?",a:"PUT gửi toàn bộ tài nguyên, thay thế bản cũ, nên idempotent. PATCH chỉ gửi phần thay đổi. PATCH có thể idempotent hoặc không, tùy cách định nghĩa thao tác."}],
+ project:"Các API search của nền tảng EAV đều là POST. Đây là quyết định có lý do. Khi bị hỏi, hãy thừa nhận quy ước, nêu lý do, rồi nêu cách cải thiện.",
+ rel:["api-practices","eav","http-basics"],
+ quiz:[{q:"Method nào KHÔNG idempotent theo chuẩn?",o:["GET","PUT","DELETE","POST"],a:3,w:"POST gọi hai lần có thể tạo hai bản ghi."},
+       {q:"Đường dẫn nào đúng phong cách REST nhất để lấy học sinh của lớp 7?",o:["/getStudentsByClass?classId=7","/classes/7/students","/student/list/7","/api/searchStudent"],a:1,w:"Danh từ, phân cấp tài nguyên, hành động nằm ở method GET."}]},
+
+{id:"api-practices", r:"http", title:"Phân trang, lỗi, version và idempotency key", min:9,
+ problem:"Một API dùng được lâu dài cần nhiều hơn method đúng: phân trang không sập khi dữ liệu lớn, lỗi có cấu trúc, và thay đổi không làm vỡ client cũ.",
+ flow:[{t:"Phân trang",d:"offset hoặc cursor"},{t:"Lỗi chuẩn",d:"Problem Details"},{t:"Version",d:"/v1, header"},{t:"Idempotency key",d:"chống tạo trùng"}],
+ points:[
+  "Offset (page=50&size=20): dễ làm nhưng trang càng sâu càng chậm vì DB vẫn phải đếm bỏ các dòng phía trước, và dễ lặp hoặc sót khi dữ liệu thay đổi giữa hai lần gọi.",
+  "Cursor/keyset (after=id_cuoi): WHERE id > ? ORDER BY id LIMIT 20. Nhanh đều ở mọi trang, ổn định khi có dữ liệu mới. Đổi lại không nhảy thẳng tới trang 50 được.",
+  "Lỗi nên có cấu trúc thống nhất. Chuẩn RFC 9457 (Problem Details): type, title, status, detail, instance. Spring 6 hỗ trợ sẵn ProblemDetail.",
+  "Version API khi có thay đổi phá vỡ: /api/v1/... hoặc header. Thêm field mới không cần version mới.",
+  "Idempotency key: client gửi kèm một mã duy nhất cho thao tác POST quan trọng (thanh toán, ký). Server lưu mã đã xử lý, gặp lại thì trả kết quả cũ thay vì làm lại."
+ ],
+ pitfalls:["Trả nguyên stack trace trong response lỗi: lộ thông tin nội bộ.","Không giới hạn size: client gọi size=100000 làm sập DB.","Đếm tổng số dòng (COUNT) trên bảng lớn ở mọi lần phân trang."],
+ iv:[{q:"Phân trang offset có vấn đề gì với bảng lớn?",a:"Trang càng sâu càng chậm vì DB phải quét và bỏ qua toàn bộ các dòng trước offset. Dữ liệu thay đổi giữa hai lần gọi gây lặp hoặc sót. Với danh sách dài hoặc cuộn vô hạn nên dùng keyset: WHERE id > id_cuối LIMIT n, có index trên cột sắp xếp."},
+     {q:"Làm sao để người dùng bấm nút ký hai lần không tạo hai giao dịch?",a:"Phía client chặn bấm lặp chỉ là lớp phụ. Phía server dùng idempotency key hoặc câu UPDATE có điều kiện (WHERE signed = false) để chỉ một lần thành công, kèm unique constraint làm lớp chặn cuối."}],
+ project:"Luồng ký số SmartCA nhiều file là ứng viên tốt cho idempotency key: mạng chập chờn khiến FE gửi lại, server không được tạo giao dịch ký thứ hai.",
+ rel:["rest-design","locking","delivery-idempotency"],
+ quiz:[{q:"Danh sách thông báo cuộn vô hạn, hàng triệu dòng. Phân trang nào hợp nhất?",o:["Offset","Keyset/cursor","Tải hết rồi cắt ở FE","Không phân trang"],a:1,w:"Keyset nhanh đều ở mọi vị trí và ổn định khi có dữ liệu mới."},
+       {q:"Idempotency key giải quyết vấn đề gì?",o:["Tăng tốc truy vấn","Chống xử lý trùng khi client gửi lại cùng một thao tác","Mã hóa dữ liệu","Phân quyền"],a:1,w:"Server nhận ra thao tác đã xử lý và trả lại kết quả cũ."}]},
+
+/* ================= REQUEST ================= */
+{id:"request-lifecycle", r:"request", title:"Request đi qua Spring Boot thế nào", min:12,
+ problem:"Câu bị đánh trượt: \"chưa hiểu cách dữ liệu đi vào một request\". Đây là bức tranh toàn cảnh từ lúc request tới server đến lúc response quay về.",
+ flow:[{t:"Tomcat",d:"nhận kết nối, giao thread"},{t:"Filter chain",d:"CORS, Security, JWT"},{t:"DispatcherServlet",d:"tìm handler"},{t:"Argument resolver",d:"@PathVariable, @RequestBody"},{t:"Controller → Service",d:"proxy @Transactional"},{t:"Repository → DB",d:"Hikari, Hibernate"},{t:"Message converter",d:"object → JSON"}],
+ points:[
+  "Tomcat nhận kết nối TCP, đọc HTTP, giao request cho một thread (platform hoặc virtual).",
+  "Filter chain chạy trước Spring MVC. Spring Security là một chuỗi filter: đọc JWT, xác thực, kiểm tra quyền. Bị chặn ở đây thì request không bao giờ tới controller (401/403).",
+  "DispatcherServlet là cửa chính của Spring MVC. Nó hỏi HandlerMapping xem URL + method ứng với hàm controller nào. Không có thì 404, sai method thì 405.",
+  "Interceptor (HandlerInterceptor) chạy quanh controller: preHandle, postHandle, afterCompletion.",
+  "Argument resolver gán dữ liệu vào tham số: @PathVariable, @RequestParam từ URL; @RequestHeader từ header; @RequestBody qua HttpMessageConverter (Jackson) từ JSON; @Valid kiểm tra ràng buộc.",
+  "Controller gọi service qua proxy (transaction mở ở đây), service gọi repository, Hibernate lấy connection từ HikariCP và chạy SQL.",
+  "Đường về: giá trị trả về được Jackson chuyển thành JSON. Exception được @ControllerAdvice biến thành response lỗi."
+ ],
+ pitfalls:["@Controller thay vì @RestController: chuỗi trả về bị hiểu là tên view.","Tên trong {timelock} khác tham số timeLock: MissingPathVariableException.","Nghĩ Security nằm trong controller: thực ra nó chặn từ filter, trước cả DispatcherServlet."],
+ iv:[{q:"Mô tả đường đi của một request trong ứng dụng Spring Boot.",a:"Tomcat nhận kết nối và giao cho một thread. Request đi qua filter chain, trong đó Spring Security xác thực JWT và kiểm tra quyền. Sau đó DispatcherServlet dùng HandlerMapping tìm hàm controller, interceptor chạy trước, argument resolver gán @PathVariable, @RequestParam, @RequestBody (Jackson) và validate. Controller gọi service qua proxy transaction, service gọi repository, Hibernate lấy connection từ Hikari để chạy SQL. Kết quả được Jackson chuyển thành JSON; nếu có exception thì @ControllerAdvice chuyển thành response lỗi."},
+     {q:"Request bị 401 thì nó dừng ở tầng nào?",a:"Ở filter chain của Spring Security, trước DispatcherServlet. Controller không hề được gọi."}],
+ project:"Trong microservices của dự án, trước Tomcat còn có API Gateway: gateway xác thực JWT, định tuyến tới service. Tự vẽ lại đường đi của request ký số từ FE tới bảng DB là bài luyện tốt nhất cho phần này.",
+ rel:["binding-validation","exception-handling","authn-authz","propagation"],
+ quiz:[{q:"Thành phần nào chọn hàm controller ứng với URL?",o:["Filter","HandlerMapping qua DispatcherServlet","Hibernate","Jackson"],a:1,w:"DispatcherServlet hỏi HandlerMapping."},
+       {q:"Thiếu token, controller có được gọi không?",o:["Có, rồi trả 401","Không, Security filter chặn trước","Có nếu dùng @RestController","Tùy Jackson"],a:1,w:"Filter chain chạy trước DispatcherServlet."},
+       {q:"Ai chuyển JSON trong body thành object Java?",o:["Tomcat","HttpMessageConverter (Jackson)","HikariCP","HandlerMapping"],a:1,w:"@RequestBody dùng HttpMessageConverter."}]},
+
+{id:"binding-validation", r:"request", title:"Binding, validation và @RestController", min:8,
+ problem:"Rất nhiều lỗi 400/500 khó hiểu đến từ bước gán dữ liệu vào tham số: sai tên, sai kiểu, quên annotation.",
+ flow:[{t:"URL /students/7",d:"@PathVariable"},{t:"?page=2",d:"@RequestParam"},{t:"Header",d:"@RequestHeader"},{t:"JSON body",d:"@RequestBody + Jackson"},{t:"@Valid",d:"lỗi → 400"}],
+ points:[
+  "@PathVariable khớp theo tên, phân biệt hoa thường: {timeLock} phải trùng tên tham số, hoặc ghi rõ @PathVariable(\"timeLock\").",
+  "Sai kiểu (\"abc\" vào Integer) → MethodArgumentTypeMismatchException → 400.",
+  "@RequestBody đọc JSON bằng Jackson. JSON hỏng → HttpMessageNotReadableException → 400.",
+  "@Valid + Bean Validation (@NotNull, @Size, @Email) trên DTO. Không đạt → MethodArgumentNotValidException → 400 kèm danh sách lỗi.",
+  "@RestController = @Controller + @ResponseBody: giá trị trả về ghi thẳng vào body. @Controller thì chuỗi trả về là tên view.",
+  "Nhận DTO, không nhận entity trực tiếp: tránh client gán được field không mong muốn (mass assignment) và tách API khỏi cấu trúc DB."
+ ],
+ pitfalls:["Nhận entity JPA làm @RequestBody: client sửa được id, trạng thái.","Quên @Valid nên các ràng buộc không chạy.","Hàm handler để static: không đi qua cơ chế bean."],
+ iv:[{q:"@Controller và @RestController khác nhau thế nào?",a:"Về bean thì giống nhau, đều là @Component. @RestController có sẵn @ResponseBody nên giá trị trả về được HttpMessageConverter ghi vào body (thường là JSON). @Controller coi chuỗi trả về là tên view để ViewResolver render HTML."},
+     {q:"Vì sao không nên nhận entity làm @RequestBody?",a:"Client có thể gửi thêm field như id, trạng thái, quyền và chúng bị gán thẳng vào entity. API cũng bị dính chặt với cấu trúc DB. Dùng DTO với đúng những field cho phép và validate trên đó."}],
+ project:"Lỗi benchmark trước đây: dùng @Controller nên chuỗi OK::VirtualThread bị hiểu là tên view, Spring forward sang /benchmark/OKVirtualThread[... và lại khớp {timeLock} nên ra 400. Đó là một ví dụ thật cho cả bài này.",
+ rel:["request-lifecycle","exception-handling"],
+ quiz:[{q:"Gọi /students/abc vào @PathVariable Integer id. Kết quả?",o:["404","400 do sai kiểu","500","200 với id null"],a:1,w:"MethodArgumentTypeMismatchException được Spring map thành 400."},
+       {q:"Annotation nào kích hoạt kiểm tra @NotNull trên DTO?",o:["@RequestBody","@Valid","@Component","@Transactional"],a:1,w:"@Valid (hoặc @Validated)."}]},
+
+{id:"exception-handling", r:"request", title:"Xử lý lỗi tập trung", min:7,
+ problem:"Lỗi ở mọi tầng cuối cùng phải thành một response rõ ràng cho client và một dòng log đủ thông tin cho người vận hành.",
+ flow:[{t:"Exception",d:"ném từ service"},{t:"@ControllerAdvice",d:"bắt theo loại"},{t:"Map status",d:"4xx hay 5xx"},{t:"Response",d:"ProblemDetail"},{t:"Log",d:"kèm traceId"}],
+ points:[
+  "@RestControllerAdvice + @ExceptionHandler bắt exception theo loại ở một chỗ, thay vì try/catch rải rác trong controller.",
+  "Lỗi do client (dữ liệu sai, không tìm thấy, xung đột trạng thái) → 4xx. Lỗi do hệ thống (DB sập, bug) → 5xx.",
+  "Tạo exception nghiệp vụ riêng: NotFoundException → 404, AlreadySignedException → 409.",
+  "Response lỗi không chứa stack trace. Log phía server thì phải đủ: stack trace, traceId, user, tenant.",
+  "Exception bị nuốt trong service @Transactional làm transaction vẫn commit: xử lý lỗi sai chỗ còn ảnh hưởng tới dữ liệu."
+ ],
+ pitfalls:["catch (Exception e) { return null; }: lỗi biến mất, client nhận dữ liệu rỗng.","Mọi lỗi đều 500 làm client không biết là lỗi của mình.","Log lỗi hai lần ở hai tầng gây nhiễu."],
+ iv:[{q:"Em xử lý exception trong Spring thế nào?",a:"Dùng @RestControllerAdvice bắt tập trung: exception nghiệp vụ map sang 4xx phù hợp, lỗi không lường trước thành 500. Response theo một cấu trúc thống nhất như ProblemDetail, không lộ stack trace. Log đầy đủ phía server kèm traceId để tra ngược."}],
+ project:"Khi FE báo lỗi, có traceId trong response là có thể tìm ngay log tương ứng trên đúng pod, thay vì lục log cả ba môi trường.",
+ rel:["request-lifecycle","observability","propagation"],
+ quiz:[{q:"Người dùng ký một hồ sơ đã được ký. Mã nào hợp lý nhất?",o:["200","400","409 Conflict","500"],a:2,w:"Xung đột với trạng thái hiện tại của tài nguyên → 409."}]},
+
+{id:"filters-interceptors", r:"request", title:"Filter, Interceptor hay AOP", min:6,
+ problem:"Ba cách chèn logic chạy quanh request. Chọn sai chỗ thì hoặc không chạy, hoặc chạy thừa.",
+ flow:[{t:"Filter",d:"tầng Servlet, mọi request"},{t:"Interceptor",d:"tầng Spring MVC, quanh handler"},{t:"AOP",d:"quanh method của bean"}],
+ points:[
+  "Filter (jakarta.servlet.Filter): chạy trước cả Spring MVC, thấy mọi request kể cả tài nguyên tĩnh. Hợp cho bảo mật, CORS, gắn traceId, đọc tenant từ token.",
+  "HandlerInterceptor: chạy khi đã biết handler nào xử lý. Hợp cho log thời gian xử lý, kiểm tra theo annotation trên controller.",
+  "AOP (@Aspect): bọc quanh method của bất kỳ bean nào, không chỉ controller. @Transactional, @Cacheable, @Async đều là AOP qua proxy.",
+  "Thứ tự: Filter → DispatcherServlet → Interceptor.preHandle → Controller → (AOP quanh service) → Interceptor.afterCompletion → Filter."
+ ],
+ pitfalls:["Đặt logic bảo mật trong interceptor: request bị chặn trễ hơn và dễ bỏ sót đường dẫn.","Quên rằng AOP không chạy khi gọi this.method()."],
+ iv:[{q:"Muốn gắn tenant từ JWT vào ngữ cảnh cho mọi tầng dùng, em đặt ở đâu?",a:"Ở một filter chạy sau bước xác thực: đọc claim tenant từ token đã kiểm tra, đặt vào ngữ cảnh request (ThreadLocal hoặc ScopedValue), và dọn dẹp trong finally."}],
+ project:"Việc gắn tenant và vai trò từ token cho các service là ví dụ đúng của filter.",
+ rel:["request-lifecycle","multi-tenant","propagation"],
+ quiz:[{q:"@Transactional được hiện thực bằng cơ chế nào?",o:["Filter","Interceptor","AOP proxy","Jackson"],a:2,w:"Proxy AOP bọc quanh bean."}]},
+
+/* ================= SECURITY ================= */
+{id:"authn-authz", r:"security", title:"Xác thực, phân quyền và Spring Security", min:8,
+ problem:"Authentication trả lời \"bạn là ai\", authorization trả lời \"bạn được làm gì\". Spring Security bật lên là khóa mọi thứ, nên phải hiểu nó chạy ra sao.",
+ flow:[{t:"Request",d:"kèm token"},{t:"Authentication filter",d:"xác minh token"},{t:"SecurityContext",d:"lưu người dùng"},{t:"Authorization",d:"kiểm tra quyền"},{t:"Controller",d:"hoặc 401/403"}],
+ points:[
+  "Authentication: xác minh danh tính (mật khẩu, token). Authorization: quyết định có được làm hành động không (vai trò, quyền).",
+  "Session: server lưu phiên, client giữ cookie session id. Token (JWT): server không lưu, token tự mang thông tin và chữ ký.",
+  "Chỉ cần có spring-boot-starter-security, Boot khóa mọi endpoint, tạo user mặc định với mật khẩu in ra log, bật form login và HTTP Basic, bật CSRF.",
+  "Khai báo bean SecurityFilterChain để tự cấu hình: endpoint nào permitAll, endpoint nào cần vai trò nào.",
+  "Sau khi xác thực, thông tin người dùng nằm trong SecurityContextHolder (mặc định là ThreadLocal), các tầng sau đọc được."
+ ],
+ pitfalls:["Nghĩ \"chưa có SecurityConfig là chưa có bảo mật\": starter đã tự bật cấu hình mặc định.","Benchmark mà để bật xác thực: đo luôn cả chi phí xác thực."],
+ iv:[{q:"Authentication và authorization khác nhau thế nào?",a:"Authentication xác minh người gọi là ai, ví dụ kiểm tra chữ ký JWT. Authorization quyết định người đó có được làm việc này không, dựa trên vai trò hoặc quyền. Thất bại ở bước đầu là 401, ở bước sau là 403."}],
+ project:"Lần benchmark kẹt 100 request/giây dù endpoint không làm gì, bỏ Spring Security đi thì lên khoảng 30.000. Câu chuyện này cho thấy filter bảo mật chạy cho mọi request và có chi phí.",
+ rel:["jwt","request-lifecycle","rbac"],
+ quiz:[{q:"Thêm spring-boot-starter-security mà không cấu hình gì. Điều gì xảy ra?",o:["Không có gì thay đổi","Mọi endpoint yêu cầu đăng nhập","Chỉ /admin bị khóa","App không khởi động"],a:1,w:"Cấu hình mặc định khóa tất cả."}]},
+
+{id:"jwt", r:"security", title:"JWT thực sự là gì", min:10,
+ problem:"Trả lời \"JWT chủ yếu để chặn đăng nhập\" là chưa đúng. JWT là thẻ ra vào được cấp sau khi đăng nhập, được kiểm tra ở mọi request.",
+ flow:[{t:"Đăng nhập",d:"user + mật khẩu"},{t:"Server ký JWT",d:"header.payload.signature"},{t:"Client gửi kèm",d:"Authorization: Bearer"},{t:"Server kiểm chữ ký",d:"+ hạn dùng"},{t:"Đọc claims",d:"user, role, tenant"}],
+ points:[
+  "JWT gồm ba phần base64url nối bằng dấu chấm: header (thuật toán), payload (claims), signature.",
+  "Payload chỉ được mã hóa base64, KHÔNG được mã hóa bí mật: ai cũng đọc được. Không để mật khẩu hay dữ liệu nhạy cảm vào đó.",
+  "Chữ ký đảm bảo không ai sửa được nội dung mà không bị phát hiện. HS256 dùng một khóa bí mật chung. RS256 dùng khóa riêng để ký, khóa công khai để kiểm, hợp với nhiều service.",
+  "Claims chuẩn: sub (người dùng), exp (hết hạn), iat (thời điểm cấp), jti (mã token). Claims tự thêm: role, tenant.",
+  "Ưu điểm: stateless, service nào có khóa kiểm đều tự xác thực được, không cần tra session. Nhược điểm lớn: đã cấp thì không thu hồi được cho tới khi hết hạn."
+ ],
+ pitfalls:["Lưu JWT trong localStorage: script độc (XSS) đọc được. Cookie HttpOnly an toàn hơn trước XSS nhưng phải xử lý CSRF.","Access token sống nhiều ngày.","Không kiểm tra thuật toán (alg none)."],
+ iv:[{q:"JWT dùng để làm gì?",a:"JWT là token do server ký, cấp sau khi đăng nhập thành công. Mỗi request gửi kèm token, server kiểm tra chữ ký và hạn dùng để biết người gọi là ai mà không cần lưu session, nên dễ mở rộng ra nhiều service. Trong token có claims như user, vai trò, tenant để phân quyền. Vì không thu hồi được trước hạn nên dùng access token ngắn hạn kèm refresh token."},
+     {q:"Payload JWT có bí mật không?",a:"Không. Payload chỉ base64url, ai cầm token cũng giải mã đọc được. Chữ ký chỉ chống sửa, không chống đọc."}],
+ project:"Chị đã nâng hệ thống từ một token sang access token + refresh token, và đưa vai trò vào token để các service xử lý sự kiện không phải gọi service phân quyền. Đó là hai quyết định thiết kế có thể kể kèm lý do.",
+ rel:["access-refresh","multi-tenant","authn-authz"],
+ quiz:[{q:"Ai đọc được payload của JWT?",o:["Chỉ server","Bất kỳ ai có token","Không ai","Chỉ người có khóa riêng"],a:1,w:"Payload chỉ là base64url."},
+       {q:"Điểm yếu cố hữu của JWT stateless là gì?",o:["Chậm","Không thu hồi được trước khi hết hạn","Không chứa được role","Chỉ dùng với session"],a:1,w:"Server không lưu nên không có chỗ để \"gạch\" token, trừ khi thêm cơ chế phụ."}]},
+
+{id:"access-refresh", r:"security", title:"Access token, refresh token và khi đổi quyền", min:10,
+ problem:"Câu hỏi phỏng vấn: đổi quyền của user rồi thì JWT đang chứa vai trò cũ xử lý thế nào?",
+ flow:[{t:"Access token",d:"5–15 phút"},{t:"Hết hạn",d:"401"},{t:"Refresh token",d:"đổi lấy AT mới"},{t:"Server đọc DB",d:"vai trò hiện tại"},{t:"AT mới",d:"quyền mới"}],
+ points:[
+  "Access token ngắn hạn để nếu bị lộ thì thiệt hại ngắn. Refresh token dài hạn, chỉ gửi tới endpoint làm mới, được server lưu nên thu hồi được.",
+  "Rotation: mỗi lần làm mới cấp refresh token mới và vô hiệu cái cũ. Refresh token cũ bị dùng lại là dấu hiệu bị đánh cắp.",
+  "Đổi quyền, cách 1: chấp nhận độ trễ, quyền mới có hiệu lực khi access token hết hạn và được làm mới.",
+  "Cách 2: thu hồi refresh token của user và lưu \"thời điểm đổi quyền\" (hoặc số version) vào Redis. Gateway so iat của token với thời điểm đó, token cũ hơn thì từ chối để client làm mới.",
+  "Cách 3: danh sách đen jti trong Redis tới khi token hết hạn.",
+  "Cách 4: không để quyền chi tiết trong token. Token chỉ có user + tenant, quyền tra từ cache, đổi quyền thì cập nhật cache là có hiệu lực ngay."
+ ],
+ pitfalls:["Cách 2 và 3 làm mất một phần tính stateless: mỗi request tra Redis.","Quên thu hồi refresh token khi đổi mật khẩu hoặc khóa tài khoản."],
+ iv:[{q:"Đổi vai trò của user thì JWT chứa vai trò cũ xử lý thế nào?",a:"JWT không sửa được sau khi cấp nên vai trò trong token sẽ cũ tới khi hết hạn. Bên em xử lý hai tầng: quyền chi tiết theo menu nằm trong cache Redis và được đồng bộ ngay khi đổi vai trò nên có hiệu lực ngay; vai trò trong access token được cập nhật khi token hết hạn và làm mới. Nếu cần hiệu lực tức thì, em thu hồi refresh token và lưu thời điểm đổi quyền vào Redis để gateway từ chối token cấp trước thời điểm đó."}],
+ project:"Hệ thống của chị đang kết hợp cách 1 và cách 4: vai trò trong token, menu chi tiết trong Redis. Kiểm tra lại code để nói đúng thời hạn access token và luồng làm mới thực tế.",
+ rel:["jwt","rbac","caching"],
+ quiz:[{q:"Muốn quyền mới có hiệu lực gần như ngay lập tức mà vẫn dùng JWT, cách nào hợp?",o:["Tăng hạn access token","Lưu thời điểm đổi quyền vào Redis, gateway từ chối token cấp trước đó","Bỏ chữ ký","Lưu JWT vào DB"],a:1,w:"So iat với thời điểm đổi quyền, buộc client làm mới."}]},
+
+{id:"multi-tenant", r:"security", title:"Nhiều tenant: tin tenant ở đâu", min:9,
+ problem:"Câu hỏi phỏng vấn: tenant đã có trong JWT, sao còn truyền trên path variable? Bản chất là: nguồn sự thật về tenant là gì và có tin được không.",
+ flow:[{t:"JWT",d:"claim tenant (đã ký)"},{t:"Gateway/filter",d:"đọc và kiểm tra"},{t:"Ngữ cảnh request",d:"TenantContext"},{t:"Truy vấn",d:"WHERE tenant_id = ?"}],
+ points:[
+  "Mọi thứ client gửi (path, query, header tự đặt, body) đều sửa được. Chỉ claim trong token đã ký là client không sửa được.",
+  "Nguồn sự thật nên là tenant trong JWT. Filter hoặc gateway đọc nó, đặt vào ngữ cảnh request, tầng dưới dùng từ đó.",
+  "Tenant xuất hiện thêm trên path là thừa và có thể mâu thuẫn. Nếu buộc phải giữ (ví dụ admin cấp cao chuyển trường), server phải đối chiếu với token, lệch thì 403.",
+  "Gateway gắn tenant từ token vào header cho service nội bộ là cách làm phổ biến, với hai điều kiện: gateway luôn ghi đè header client gửi, và service chỉ nhận traffic qua gateway.",
+  "Ba mức cách ly dữ liệu: chung bảng có cột tenant_id (rẻ, dễ rò nếu quên điều kiện), schema riêng mỗi tenant, DB riêng mỗi tenant (cách ly mạnh nhất, tốn nhất)."
+ ],
+ pitfalls:["Một câu query quên WHERE tenant_id là rò dữ liệu chéo giữa các trường.","Tin header X-Tenant-ID do client gửi."],
+ iv:[{q:"Tenant đã có trong JWT, sao còn truyền trên path?",a:"Đúng là thừa. Tenant trên path do client gửi nên sửa được. Nếu server dùng giá trị đó để truy vấn mà không đối chiếu token thì người trường A có thể đổi URL để đọc dữ liệu trường B. Cách đúng là lấy tenant từ token làm nguồn chính; nếu giữ trên path thì phải kiểm tra khớp với token, lệch thì trả 403."}],
+ project:"Mở code xem server có đối chiếu tenant trên path với token không. Có thì nói hệ thống đã kiểm tra; chưa thì nói đây là điểm cần sửa và cách sửa.",
+ rel:["jwt","filters-interceptors","case-school"],
+ quiz:[{q:"Nguồn tenant đáng tin nhất?",o:["Path variable","Header client tự gửi","Claim trong JWT đã kiểm chữ ký","Body JSON"],a:2,w:"Client không sửa được nội dung đã ký."}]},
+
+{id:"rbac", r:"security", title:"RBAC, cache quyền và đồng bộ", min:9,
+ problem:"Phân quyền theo vai trò khó nhất ở chỗ giữ quyền và menu được cache luôn khớp với dữ liệu gốc mỗi khi đổi vai trò hay đổi menu.",
+ flow:[{t:"User",d:""},{t:"Vai trò / chức vụ",d:"n-n"},{t:"Quyền",d:"menu, entity, hành động"},{t:"Bảng quyền tính sẵn",d:"user_menu"},{t:"Cache Redis",d:"đọc nhanh"}],
+ points:[
+  "RBAC: user ↔ vai trò ↔ quyền. Kiểm tra quyền là xem user có vai trò nào chứa quyền đó.",
+  "Tính sẵn quyền cuối cùng của từng user vào một bảng (như user_menu) giúp đọc nhanh, đổi lại mỗi lần đổi vai trò hoặc menu phải tính lại.",
+  "Cập nhật DB và xóa cache: xóa SAU khi commit (@TransactionalEventListener AFTER_COMMIT). Xóa trước khi commit thì một request khác có thể đọc dữ liệu cũ và nạp lại vào cache.",
+  "Đồng bộ phải chạy lại được nhiều lần mà kết quả không đổi (idempotent), để lỗi giữa chừng chỉ cần chạy lại.",
+  "Có cơ chế phát hiện lệch: TTL cho cache như lưới an toàn, hoặc công cụ đồng bộ lại cho một user."
+ ],
+ pitfalls:["Xóa cache trong transaction rồi transaction rollback: cache và DB lệch.","Đồng bộ toàn bộ user mỗi lần đổi một menu: chậm và dễ lỗi giữa chừng."],
+ iv:[{q:"Đồng bộ quyền bị lỗi thì sao?",a:"Em thiết kế đồng bộ idempotent để chạy lại an toàn. Xóa hoặc cập nhật cache sau khi transaction commit để không nạp lại dữ liệu cũ. Có TTL làm lưới an toàn và có cách đồng bộ lại thủ công cho từng tài khoản khi phát hiện lệch."}],
+ project:"Chính chị xây phần này: bảng quyền tính sẵn, đồng bộ cache Redis khi gán hoặc gỡ vai trò. Chuẩn bị kể một lần đồng bộ lỗi: triệu chứng, nguyên nhân, cách sửa.",
+ rel:["caching","access-refresh","outbox"],
+ quiz:[{q:"Nên xóa cache quyền vào lúc nào khi đổi vai trò?",o:["Trước khi cập nhật DB","Trong transaction","Sau khi transaction commit","Không cần xóa"],a:2,w:"Sau commit để không có request nào nạp lại dữ liệu cũ vào cache."}]}
+];
+LESSONS.push(
+/* ================= DATA ================= */
+{id:"transactions", r:"data", title:"ACID, isolation và MVCC", min:10,
+ problem:"Transaction là một nhóm thao tác hoặc thành công hết, hoặc không có gì thay đổi. Isolation quyết định các transaction chạy song song thấy nhau tới đâu.",
+ flow:[{t:"BEGIN",d:""},{t:"Các câu lệnh",d:"đọc theo ảnh chụp"},{t:"COMMIT",d:"ghi WAL, bền vững"},{t:"hoặc ROLLBACK",d:"hủy hết"}],
+ points:[
+  "ACID: Atomicity (tất cả hoặc không), Consistency (luôn thỏa ràng buộc), Isolation (song song không làm hỏng nhau), Durability (đã commit thì không mất).",
+  "Bốn mức isolation: READ UNCOMMITTED, READ COMMITTED, REPEATABLE READ, SERIALIZABLE. PostgreSQL mặc định READ COMMITTED.",
+  "Hiện tượng: dirty read (đọc dữ liệu chưa commit), non-repeatable read (đọc lại một dòng ra giá trị khác), phantom (cùng điều kiện ra thêm dòng), lost update (người sau ghi đè người trước).",
+  "MVCC: PostgreSQL không ghi đè mà tạo phiên bản mới của dòng. Người đọc không chặn người ghi. VACUUM dọn phiên bản cũ; transaction mở quá lâu cản việc dọn.",
+  "READ COMMITTED không chống lost update. Phải dùng UPDATE có điều kiện, @Version hoặc FOR UPDATE."
+ ],
+ pitfalls:["Gọi HTTP, gửi message, ký SmartCA bên trong transaction: giữ connection và khóa suốt thời gian chờ.","Tin rằng isolation mặc định tự chống ghi đè."],
+ iv:[{q:"Lost update là gì? READ COMMITTED có chống được không?",a:"Hai transaction cùng đọc một giá trị, cùng tính trong code, người ghi sau đè lên người trước. READ COMMITTED không chống được. Dùng UPDATE có điều kiện, optimistic lock @Version, SELECT FOR UPDATE, hoặc REPEATABLE READ kèm thử lại."}],
+ project:"Chuyển lớp cập nhật học sinh, phụ huynh, lớp: cả ba phải nằm trong một transaction để không lệch dữ liệu.",
+ rel:["propagation","locking","eav"],
+ quiz:[{q:"Mức isolation mặc định của PostgreSQL?",o:["READ UNCOMMITTED","READ COMMITTED","REPEATABLE READ","SERIALIZABLE"],a:1,w:"READ COMMITTED."},
+       {q:"Hai giáo viên cùng sửa điểm, người sau đè người trước. Hiện tượng gì?",o:["Dirty read","Phantom","Lost update","Deadlock"],a:2,w:"Lost update."}]},
+
+{id:"propagation", r:"data", title:"@Transactional, proxy và transaction lồng nhau", min:12,
+ problem:"Hàm @Transactional gọi hàm @Transactional khác thì có mấy transaction, ai commit, lỗi ở đâu thì mất gì.",
+ flow:[{t:"Controller",d:"gọi bean"},{t:"Proxy (lễ tân)",d:"mở / tham gia transaction"},{t:"Hàm thật",d:"chạy code"},{t:"Proxy",d:"commit hoặc rollback"}],
+ points:[
+  "Spring bọc bean bằng proxy. @Transactional chỉ có tác dụng khi lời gọi đi qua proxy, tức là được gọi từ bean khác. this.method() đi thẳng vào object thật nên annotation bị bỏ qua. Method private/final/static cũng không được bọc.",
+  "REQUIRED (mặc định): có transaction thì dùng chung, chưa có thì mở mới. Cả chuỗi chỉ commit một lần ở hàm ngoài cùng.",
+  "REQUIRES_NEW: tạm treo transaction ngoài, mở transaction riêng (connection riêng), commit ngay khi hàm xong. Hợp cho ghi log lỗi.",
+  "NESTED: dùng chung nhưng đặt savepoint; hàm con lỗi thì lùi về savepoint. Với JPA có hạn chế vì entity trong bộ nhớ không lùi theo.",
+  "Còn lại: SUPPORTS, NOT_SUPPORTED, MANDATORY (bắt buộc có, không thì lỗi), NEVER (bắt buộc không có).",
+  "Mặc định chỉ rollback với RuntimeException và Error. Checked exception vẫn commit, trừ khi rollbackFor.",
+  "Hàm con REQUIRED ném lỗi, hàm cha bắt và đi tiếp: transaction đã bị đánh dấu rollback-only, lúc commit Spring ném UnexpectedRollbackException."
+ ],
+ pitfalls:["REQUIRES_NEW đặt trên hàm cùng class: không có tác dụng.","REQUIRES_NEW cập nhật dòng mà transaction ngoài đang khóa: tự deadlock.","Nuốt exception trong hàm @Transactional: dữ liệu sai vẫn được commit."],
+ iv:[{q:"Hàm A @Transactional gọi B (bean khác, REQUIRED). B xong, sau đó A lỗi. Dữ liệu của B có còn?",a:"Không. B tham gia transaction của A, chưa commit gì khi B xong. A lỗi thì rollback toàn bộ, mất cả dữ liệu của B. Muốn B được lưu độc lập thì B phải là REQUIRES_NEW và được gọi qua bean khác."},
+     {q:"Khi nào gặp UnexpectedRollbackException?",a:"Hàm con dùng chung transaction (REQUIRED) ném lỗi; proxy của nó không được rollback một mình nên đánh dấu rollback-only. Hàm cha bắt lỗi, chạy tiếp, cố commit; Spring thấy dấu đó, rollback hết và ném UnexpectedRollbackException cho người gọi để không ai tưởng đã lưu."}],
+ project:"Hình dung \"ống chung, ống riêng\": REQUIRED đổ chung một ống, nổ là bay hết; REQUIRES_NEW có ống riêng, đóng nắp ngay khi xong.",
+ rel:["transactions","outbox","filters-interceptors"],
+ quiz:[{q:"Trong ServiceA, a() @Transactional gọi this.b() có REQUIRES_NEW. Sau đó a() ném lỗi. b() có được lưu?",o:["Có, vì REQUIRES_NEW","Không, vì this.b() không qua proxy nên b chạy chung transaction của a","Có nếu b không lỗi","Tùy isolation"],a:1,w:"Gọi nội bộ bỏ qua proxy."},
+       {q:"b() (bean khác, REQUIRES_NEW) ném lỗi, a() bắt lỗi và chạy tiếp. Kết quả?",o:["Mất hết, UnexpectedRollbackException","Dữ liệu của a còn, của b mất","Cả hai còn","Cả hai mất, không exception"],a:1,w:"Ống riêng của b nổ một mình, ống của a nguyên vẹn."},
+       {q:"Hàm @Transactional ném IOException (checked). Mặc định?",o:["Rollback","Commit","Treo","Ném UnexpectedRollbackException"],a:1,w:"Mặc định chỉ rollback RuntimeException và Error."}]},
+
+{id:"locking", r:"data", title:"Khóa, chống ghi đè và deadlock", min:9,
+ problem:"Hai người cùng bấm ký một hồ sơ. Synchronized trong Java không đủ khi chạy nhiều pod. Phải chặn ở tầng DB.",
+ flow:[{t:"UPDATE có điều kiện",d:"WHERE signed=false"},{t:"Optimistic",d:"@Version"},{t:"Pessimistic",d:"FOR UPDATE"},{t:"Unique constraint",d:"lớp chặn cuối"}],
+ points:[
+  "UPDATE ... SET signed=true WHERE id=? AND signed=false: kiểm tra và ghi trong một câu, nguyên tử. Số dòng cập nhật bằng 0 nghĩa là người khác đã ký trước.",
+  "Optimistic lock (@Version): không khóa, lúc ghi so version, lệch thì ném OptimisticLockException. Hợp khi xung đột hiếm.",
+  "Pessimistic lock (SELECT ... FOR UPDATE): khóa dòng ngay khi đọc, người khác chờ. Hợp khi xung đột thường xuyên và transaction ngắn. NOWAIT báo lỗi ngay; SKIP LOCKED bỏ qua dòng đang khóa, dùng cho hàng đợi job.",
+  "synchronized chỉ có tác dụng trong một JVM. Nhiều pod thì phải khóa ở DB hoặc khóa phân tán (Redis).",
+  "Deadlock: hai transaction giữ khóa chéo và chờ nhau. PostgreSQL phát hiện sau deadlock_timeout (mặc định 1 giây) và hủy một bên (lỗi 40P01). Tránh bằng cách khóa theo cùng thứ tự và giữ transaction ngắn."
+ ],
+ pitfalls:["Đọc rồi kiểm tra trong Java rồi mới ghi: khoảng hở giữa đọc và ghi là chỗ người khác chen vào.","Khóa trong Java quanh lời gọi DB khi chạy virtual thread trên Java 21: pinning."],
+ iv:[{q:"Hai người cùng bấm ký một hồ sơ gần như cùng lúc. Hệ thống xử lý thế nào?",a:"Đây là bài toán lost update. synchronized không đủ vì có nhiều pod. Em dùng UPDATE có điều kiện WHERE signed = false để chỉ một người thành công; người còn lại nhận số dòng cập nhật bằng 0 và được báo 409. Có thể thay bằng @Version hoặc FOR UPDATE tùy mức tranh chấp, và unique constraint làm lớp chặn cuối."}],
+ project:"Luồng ký số chặn ký lại và chặn đổi trạng thái \"đã ký\" ngoài luồng ký. Mở code xem hệ thống dùng cách nào ở trên.",
+ rel:["transactions","api-practices","threads-vt"],
+ quiz:[{q:"Nhiều worker lấy job từ một bảng mà không trùng nhau. Dùng gì?",o:["synchronized","SELECT ... FOR UPDATE SKIP LOCKED","READ UNCOMMITTED","Xóa index"],a:1,w:"Mỗi worker khóa dòng nó lấy, bỏ qua dòng worker khác đang giữ."}]},
+
+{id:"indexing", r:"data", title:"Index và EXPLAIN", min:10,
+ problem:"Index giúp đọc nhanh nhưng làm ghi chậm. Chọn index theo câu truy vấn thật và kiểm chứng bằng EXPLAIN ANALYZE.",
+ flow:[{t:"Câu SQL chậm",d:"pg_stat_statements"},{t:"EXPLAIN ANALYZE",d:"bước tốn nhất"},{t:"So ước lượng / thật",d:""},{t:"Sửa index / query",d:""},{t:"Đo lại",d:""}],
+ points:[
+  "B-tree là index mặc định: tìm O(log n), dùng được cho =, <, >, BETWEEN, ORDER BY, LIKE 'abc%'.",
+  "Index nhiều cột (a, b, c) theo quy tắc cột bên trái: dùng được cho a, a+b, a+b+c; thường không dùng được khi chỉ lọc b. Cột lọc bằng = đặt trước, cột khoảng hoặc sắp xếp đặt sau.",
+  "Kiểu quét: Seq Scan (đọc cả bảng), Index Scan, Bitmap Heap Scan, Index Only Scan (đủ dữ liệu trong index).",
+  "Index có mà không được dùng: bọc hàm quanh cột (date(created_at)), khác kiểu, LIKE '%x', sai thứ tự cột, lấy phần lớn số dòng, thống kê cũ.",
+  "PostgreSQL không tự tạo index cho khóa ngoại. Tạo index trên production dùng CREATE INDEX CONCURRENTLY."
+ ],
+ pitfalls:["Index mọi cột.","Thêm index trước khi kiểm tra có phải N+1 không."],
+ iv:[{q:"Có index (a, b, c). WHERE b = ? có dùng index không?",a:"Thường không, vì index sắp theo a trước. Dùng được cho a, a + b, a + b + c."}],
+ project:"Bảng user_menu nên có unique (user_id, menu_code) để vừa tra nhanh vừa chống trùng.",
+ rel:["n-plus-one","eav","locking"],
+ quiz:[{q:"WHERE date(created_at) = '2026-11-06' chậm dù có index created_at. Sửa?",o:["Thêm RAM","Viết thành created_at >= '2026-11-06' AND created_at < '2026-11-07'","Bỏ index","Dùng LIKE"],a:1,w:"Không bọc hàm quanh cột để index dùng được."}]},
+
+{id:"n-plus-one", r:"data", title:"N+1 query", min:8,
+ problem:"Lấy danh sách tốn 1 câu, rồi mỗi phần tử lại tốn thêm 1 câu cho dữ liệu liên quan. 100 phần tử thành 101 câu.",
+ flow:[{t:"1 câu lấy danh sách",d:""},{t:"Lặp từng phần tử",d:"chạm quan hệ LAZY"},{t:"N câu",d:"mỗi lần một round-trip"},{t:"Gộp lại",d:"fetch join, batch, DTO"}],
+ points:[
+  "Quan hệ LAZY là một proxy; lần đầu chạm vào mới chạy truy vấn.",
+  "Đổi sang EAGER không hết N+1 với JPQL, lại làm mọi truy vấn khác nặng hơn.",
+  "Cách sửa: JOIN FETCH, @EntityGraph, batch fetch (WHERE id IN (...)), DTO projection.",
+  "JOIN FETCH collection cùng phân trang: Hibernate phân trang trong bộ nhớ (cảnh báo HHH000104). Dùng batch fetch hoặc tách hai bước.",
+  "Phát hiện: bật log SQL, đếm số câu cho một request; viết test khẳng định số câu."
+ ],
+ pitfalls:["Ở local DB cùng máy nên không thấy chậm; lên server mỗi câu thêm vài ms qua mạng.","open-in-view che N+1 ở tầng controller."],
+ iv:[{q:"N+1 là gì, em gặp chưa?",a:"Định nghĩa như trên, rồi kể DW-2387: danh sách tài liệu chậm vì mỗi file chạy thêm một câu lấy tag. Em gom lại thành một truy vấn và thêm phân trang."}],
+ project:"Với EAV, code search lấy mọi giá trị của cả trang trong một câu rồi gom nhóm theo id trong bộ nhớ, chính là cách tránh N+1.",
+ rel:["indexing","eav","pools"],
+ quiz:[{q:"Đổi quan hệ sang EAGER có hết N+1 không?",o:["Có","Không, với JPQL vẫn N+1 và còn nặng thêm","Chỉ với PostgreSQL","Có nếu dùng Redis"],a:1,w:"EAGER không đổi cách Hibernate nạp sau truy vấn JPQL."}]},
+
+{id:"eav", r:"data", title:"Mô hình EAV: linh động và cái giá", min:10,
+ problem:"EAV (Entity–Attribute–Value) cho phép thêm trường mà không đổi schema, nên một lõi phục vụ được nhiều sản phẩm. Cái giá nằm ở truy vấn, ràng buộc và cập nhật nhiều thực thể.",
+ flow:[{t:"entity",d:"một bản ghi"},{t:"attribute",d:"định nghĩa trường"},{t:"value",d:"giá trị theo cặp entity–attribute"},{t:"Pivot khi đọc",d:"gom lại thành object"}],
+ points:[
+  "Ưu điểm: thêm thuộc tính bằng dữ liệu, không cần migration; nhiều sản phẩm (Dowork, Đoàn Luật sư, trường học) chạy chung một source.",
+  "Nhược điểm: truy vấn lọc theo nhiều thuộc tính cần nhiều join hoặc pivot; khó tạo ràng buộc kiểu dữ liệu, unique, khóa ngoại ở tầng DB; dễ N+1.",
+  "Cập nhật nghiệp vụ chạm nhiều thực thể (chuyển lớp: học sinh, phụ huynh, lớp, nhóm phụ huynh) phải gói trong một transaction, phần gửi message để sau commit.",
+  "Thay thế hiện đại: bảng thường + cột jsonb cho phần thuộc tính động, có index GIN hoặc index biểu thức cho key hay lọc.",
+  "Khi kể về EAV, nói cả hai mặt: vì sao chọn, và hệ thống đã bù nhược điểm bằng cách nào (truy vấn gộp, cache, kiểm tra ở tầng ứng dụng)."
+ ],
+ pitfalls:["Lọc nhiều thuộc tính mà mỗi thuộc tính một subquery.","Ràng buộc nghiệp vụ chỉ nằm trong code nên dữ liệu rác lọt qua đường khác."],
+ iv:[{q:"EAV có ưu nhược điểm gì? Em xử lý nhược điểm thế nào?",a:"EAV linh động: thêm trường không cần đổi schema, một lõi phục vụ nhiều sản phẩm. Nhược điểm là truy vấn phức tạp, khó ràng buộc ở DB và cập nhật nhiều thực thể phức tạp. Bên em lấy giá trị EAV của cả trang trong một câu rồi gom nhóm trong bộ nhớ, gói các cập nhật liên quan trong một transaction. Nếu thiết kế mới, em cân nhắc bảng thường kèm cột jsonb."}],
+ project:"\"Cái giá của sự linh hoạt\" là câu chị dùng trong phần giới thiệu. Chuẩn bị ví dụ chuyển lớp và thu hồi thông báo.",
+ rel:["n-plus-one","transactions","rest-design"],
+ quiz:[{q:"Điểm mạnh chính của EAV?",o:["Truy vấn nhanh nhất","Thêm thuộc tính không cần đổi schema","Ràng buộc chặt ở DB","Không cần index"],a:1,w:"Linh hoạt về cấu trúc."}]},
+
+/* ================= PERF ================= */
+{id:"threads-vt", r:"perf", title:"Platform thread và virtual thread", min:10,
+ problem:"Tomcat mặc định 200 thread; request nào chờ I/O cũng giữ một thread. Virtual thread làm việc chờ trở nên rẻ.",
+ flow:[{t:"Virtual thread",d:"hàng triệu"},{t:"Mount",d:"lên carrier"},{t:"Gặp I/O",d:"unmount, stack lên heap"},{t:"Carrier",d:"= số nhân CPU"}],
+ points:[
+  "Platform thread ánh xạ 1:1 với thread hệ điều hành, khoảng 1MB stack giữ chỗ. Virtual thread do JVM quản lý, stack trên heap vài KB.",
+  "Virtual thread không làm một request nhanh hơn; nó cho phép nhiều request chờ cùng lúc hơn. Không giúp việc tốn CPU.",
+  "Pinning: ở Java 21, I/O bên trong synchronized giữ chặt carrier. Java 24 (JEP 491) sửa phần lớn.",
+  "Không pool virtual thread; giới hạn đồng thời bằng Semaphore.",
+  "Bật trong Spring Boot 3.2+: spring.threads.virtual.enabled=true. Sau khi bật, nút thắt dời sang connection pool."
+ ],
+ pitfalls:["Tạo 100.000 platform thread để thử: RAM máy vọt lên hàng chục GB.","Thread.ofVirtual().start rồi join() trong controller: thread Tomcat vẫn đứng chờ."],
+ iv:[{q:"Bật virtual thread thì API có nhanh hơn không?",a:"Từng request không nhanh hơn. Virtual thread tăng số request xử lý cùng lúc khi phần lớn thời gian là chờ I/O. Nếu chậm vì CPU hoặc DB thì không giúp gì."}],
+ project:"Câu chuyện benchmark: dự án chạy Java 11 nên tự dựng project Java 21, đo bằng wrk, phát hiện nút thắt ở bước xác thực chứ không ở thread.",
+ rel:["littles-law","pools","locking"],
+ quiz:[{q:"Virtual thread giúp nhiều nhất với loại tải nào?",o:["Tính toán nặng CPU","Chờ I/O nhiều","Xử lý ảnh","Mã hóa"],a:1,w:"Chờ I/O thì unmount, nhả carrier."}]},
+
+{id:"littles-law", r:"perf", title:"Đo đạc: thông lượng, độ trễ và nút thắt", min:10,
+ problem:"Benchmark ra 100 request/giây ở cả hai chế độ. Muốn hiểu vì sao, cần công thức đơn giản nối số request đồng thời, độ trễ và thông lượng.",
+ flow:[{t:"Đồng thời (L)",d:"số request đang xử lý"},{t:"Độ trễ (W)",d:"thời gian mỗi request"},{t:"Thông lượng (λ)",d:"= L ÷ W"},{t:"Nút thắt",d:"chỗ cho λ nhỏ nhất"}],
+ points:[
+  "Định luật Little: thông lượng = số request đồng thời ÷ thời gian xử lý mỗi request.",
+  "200 thread, mỗi request ngủ 1 giây: tối đa 200 request/giây.",
+  "Mỗi tài nguyên có trần riêng: thread ÷ thời gian chiếm thread; số nhân CPU ÷ thời gian CPU mỗi request; số connection DB ÷ thời gian giữ connection. Trần nhỏ nhất là nút thắt.",
+  "Thông lượng đứng yên dù tăng concurrency nghĩa là nút thắt không nằm ở chỗ vừa tăng.",
+  "Đọc kết quả wrk: Non-2xx phải bằng 0, Socket errors (timeout) phải thấp, latency phải hợp lý với logic. Kết quả nhanh bất thường thường là đang đo lỗi."
+ ],
+ pitfalls:["Đo với concurrency bằng đúng số thread: không thấy khác biệt.","Chạy app bằng Debug khi đo.","Quên --timeout của wrk (mặc định 2 giây)."],
+ iv:[{q:"API chậm khi tải cao, em tìm nút thắt thế nào?",a:"Đo thông lượng và độ trễ khi tăng dần tải. Thông lượng chững lại ở một mức thì tính trần của từng tài nguyên: thread, CPU, connection pool, dịch vụ ngoài, xem cái nào bằng mức đó. Kiểm chứng bằng cách nới riêng tài nguyên nghi ngờ rồi đo lại."}],
+ project:"Lab \"Máy tính nút thắt\" mô phỏng đúng lần benchmark của chị.",
+ rel:["threads-vt","pools","caching"],
+ quiz:[{q:"10 connection DB, mỗi request giữ connection 0,5 giây. Trần thông lượng phía DB?",o:["5 req/s","10 req/s","20 req/s","200 req/s"],a:2,w:"10 ÷ 0,5 = 20."}]},
+
+{id:"pools", r:"perf", title:"Connection pool, thread pool và timeout", min:8,
+ problem:"Pool giới hạn tài nguyên đắt. Đặt kích thước và timeout sai thì hoặc lãng phí, hoặc treo dây chuyền.",
+ flow:[{t:"Request",d:"cần connection"},{t:"HikariCP",d:"mặc định 10"},{t:"Hết connection",d:"chờ connection-timeout"},{t:"Quá hạn",d:"lỗi"}],
+ points:[
+  "HikariCP mặc định 10 connection, chờ tối đa 30 giây (connection-timeout).",
+  "Tổng connection của mọi pod không được vượt max_connections của PostgreSQL (mặc định 100).",
+  "Pool lớn chưa chắc nhanh: DB có giới hạn CPU và đĩa; quá nhiều connection làm DB chậm thêm.",
+  "Cách hiệu quả nhất là giảm thời gian giữ connection: transaction ngắn, không gọi dịch vụ ngoài trong transaction.",
+  "Mọi lời gọi ra ngoài (HTTP, Feign, SmartCA) phải có connect timeout và read timeout. Không có timeout thì một dịch vụ chậm kéo treo cả thread pool."
+ ],
+ pitfalls:["Timeout của Feign bị comment trong application.yml.","CompletableFuture.supplyAsync không truyền executor: chạy trên common pool chung cả JVM."],
+ iv:[{q:"Bật virtual thread xong, lỗi Connection is not available. Vì sao?",a:"Trước đây 200 thread Tomcat vô tình giới hạn số request chạm DB. Giờ hàng nghìn virtual thread cùng xin connection trong khi pool chỉ có 10, nên chờ quá hạn. Cần giới hạn đồng thời, rút ngắn transaction, rồi mới cân nhắc tăng pool."}],
+ project:"MessageReceiver: executor 16–30 thread, Hikari 30, prefetch 10. Hãy tính xem khi tải cao, tài nguyên nào hết trước.",
+ rel:["littles-law","resilience","threads-vt"],
+ quiz:[{q:"Vì sao không đặt pool 1.000 connection cho chắc?",o:["Hikari không cho","PostgreSQL có max_connections và DB chậm đi khi quá nhiều connection","Tốn RAM client","Không có lý do"],a:1,w:"DB mới là giới hạn thật."}]},
+
+{id:"caching", r:"perf", title:"Cache và bài toán vô hiệu hóa", min:9,
+ problem:"Cache làm đọc nhanh, nhưng khó nhất là giữ cache khớp với DB khi dữ liệu đổi.",
+ flow:[{t:"Đọc",d:"có trong cache?"},{t:"Miss",d:"đọc DB"},{t:"Ghi cache",d:"kèm TTL"},{t:"Dữ liệu đổi",d:"xóa cache sau commit"}],
+ points:[
+  "Cache-aside: đọc cache, miss thì đọc DB rồi ghi vào cache. Ghi dữ liệu thì cập nhật DB rồi xóa cache.",
+  "Xóa cache SAU khi commit. Xóa trước commit thì request khác có thể đọc DB cũ và nạp lại vào cache.",
+  "TTL là lưới an toàn: kể cả quên xóa, cache cũng tự hết hạn.",
+  "Cache stampede: key hot hết hạn, hàng nghìn request cùng đọc DB. Giải bằng khóa khi nạp lại hoặc làm mới trước hạn.",
+  "Chỉ cache thứ đọc nhiều, ghi ít, chấp nhận lệch ngắn."
+ ],
+ pitfalls:["Cache trong bộ nhớ từng pod: pod này xóa, pod kia vẫn giữ bản cũ.","Không đặt TTL."],
+ iv:[{q:"Vì sao phải xóa cache sau khi commit?",a:"Nếu xóa trước, trong khoảng chưa commit một request khác có thể miss cache, đọc DB vẫn là dữ liệu cũ và ghi lại vào cache. Kết quả là cache giữ dữ liệu cũ dù DB đã đổi."}],
+ project:"Cache menu theo tài khoản trong Redis là ví dụ của bài này.",
+ rel:["rbac","access-refresh","outbox"],
+ quiz:[{q:"Đâu là lưới an toàn khi quên xóa cache?",o:["Index","TTL","Transaction","Semaphore"],a:1,w:"Cache tự hết hạn."}]}
+);
+LESSONS.push(
+/* ================= ASYNC ================= */
+{id:"messaging-basics", r:"async", title:"RabbitMQ: exchange, queue, ack, prefetch", min:9,
+ problem:"Gửi message thay vì gọi trực tiếp giúp tách service, chịu được lúc bên nhận chậm hoặc chết. Cần hiểu đường đi của một message.",
+ flow:[{t:"Producer",d:"publish"},{t:"Exchange",d:"direct, topic, fanout"},{t:"Binding",d:"routing key"},{t:"Queue",d:"lưu message"},{t:"Consumer",d:"xử lý rồi ack"}],
+ points:[
+  "Producer gửi vào exchange, không gửi thẳng vào queue. Exchange định tuyến tới queue theo binding: direct (khớp key), topic (khớp mẫu), fanout (gửi mọi queue).",
+  "Consumer nhận message, xử lý xong thì ack. Chưa ack mà consumer chết, RabbitMQ giao lại message cho consumer khác.",
+  "Prefetch: số message tối đa một consumer giữ mà chưa ack. Lớn thì nhanh nhưng dồn việc vào một chỗ; nhỏ thì phân phối đều hơn.",
+  "Queue bền (durable) + message persistent để không mất khi broker khởi động lại.",
+  "Ack ở thời điểm nào là quyết định quan trọng: ack sau khi xử lý xong mới đảm bảo không mất message."
+ ],
+ pitfalls:["Ack ngay khi nhận rồi chuyển việc sang thread pool: xử lý lỗi thì message đã mất.","Prefetch quá lớn với việc xử lý chậm."],
+ iv:[{q:"Pod consumer chết khi đang xử lý message thì sao?",a:"Message chưa được ack nên RabbitMQ giữ lại và giao cho consumer khác. Vì vậy một message có thể được xử lý hơn một lần, consumer phải idempotent."}],
+ project:"Kết quả H5P đi qua RabbitMQ. Kiểm tra MessageReceiver: ack lúc nào, trước hay sau khi messageProcessingExecutor xử lý xong.",
+ rel:["consumer-failures","delivery-idempotency","outbox"],
+ quiz:[{q:"Producer gửi message tới đâu trong RabbitMQ?",o:["Thẳng vào consumer","Exchange","Database","Queue luôn luôn trực tiếp"],a:1,w:"Exchange định tuyến tới queue."}]},
+
+{id:"consumer-failures", r:"async", title:"Consumer xử lý lỗi thì sao", min:10,
+ problem:"Câu bị hỏi: message tới consumer mà xử lý bị lỗi thì backend xử lý thế nào. Đây là trường hợp consumer vẫn sống, khác với pod chết.",
+ flow:[{t:"Nhận message",d:""},{t:"Lỗi",d:"exception"},{t:"Retry có giãn cách",d:"1s, 2s, 4s"},{t:"Vẫn lỗi",d:"đẩy sang DLQ"},{t:"Cảnh báo",d:"xử lý lại sau"}],
+ points:[
+  "Mặc định Spring AMQP requeue khi listener ném exception. Message hỏng (poison message) bị giao lại liên tục thành vòng lặp vô hạn.",
+  "Retry có giới hạn và giãn cách cho lỗi tạm thời (DB chậm, mạng chập chờn): spring.rabbitmq.listener.simple.retry.enabled=true, max-attempts, initial-interval, multiplier.",
+  "Khi bật retry, hết số lần thử Spring mặc định từ chối message không requeue. Nếu queue có cấu hình dead letter exchange thì message sang DLQ; nếu không có thì message bị bỏ.",
+  "Lỗi chắc chắn không sửa được bằng retry (dữ liệu sai định dạng): ném AmqpRejectAndDontRequeueException để vào thẳng DLQ.",
+  "Giám sát DLQ: cảnh báo khi có message, sửa lỗi xong thì đẩy lại về queue chính."
+ ],
+ pitfalls:["Bật retry mà không cấu hình DLQ: message lỗi biến mất.","Retry không giãn cách: dồn tải thêm vào hệ thống đang yếu."],
+ iv:[{q:"Message tới consumer bị lỗi thì backend xử lý thế nào?",a:"Có hai trường hợp. Pod chết thì message chưa ack được giao cho consumer khác. Consumer sống mà xử lý lỗi thì mặc định Spring requeue và có thể lặp vô hạn. Em cấu hình retry có giới hạn và giãn cách cho lỗi tạm thời, hết lần thì đẩy vào dead letter queue để không chặn hàng đợi, lỗi dữ liệu thì vào thẳng DLQ. Có cảnh báo trên DLQ để xử lý lại. Vì message có thể giao nhiều lần nên consumer phải idempotent."}],
+ project:"Lab \"Consumer gặp lỗi\" cho chị thử bật tắt retry, DLQ, idempotency và xem chuyện gì xảy ra với message.",
+ rel:["messaging-basics","delivery-idempotency","resilience"],
+ quiz:[{q:"Bật retry 3 lần nhưng không có DLQ. Hết 3 lần message đi đâu?",o:["Requeue mãi","Bị bỏ","Lưu vào DB","Gửi email"],a:1,w:"Recoverer mặc định từ chối không requeue; không có dead letter thì message bị bỏ."},
+       {q:"Lỗi dữ liệu sai định dạng, retry vô ích. Nên làm gì?",o:["Requeue","Ném AmqpRejectAndDontRequeueException để vào DLQ","Nuốt lỗi","Tăng prefetch"],a:1,w:"Không phí lượt thử cho lỗi vĩnh viễn."}]},
+
+{id:"delivery-idempotency", r:"async", title:"Giao ít nhất một lần và idempotency", min:8,
+ problem:"RabbitMQ đảm bảo giao ít nhất một lần. Cùng một message có thể tới hai lần, nên xử lý hai lần phải ra cùng kết quả.",
+ flow:[{t:"Message có id",d:""},{t:"Đã xử lý id này?",d:"bảng processed / unique"},{t:"Rồi",d:"bỏ qua, ack"},{t:"Chưa",d:"xử lý + ghi id cùng transaction"}],
+ points:[
+  "At-most-once: có thể mất. At-least-once: có thể trùng. Exactly-once giữa các hệ thống tách rời gần như không có; thực tế là at-least-once + idempotent.",
+  "Cách 1: lưu id message đã xử lý (unique), ghi cùng transaction với dữ liệu nghiệp vụ.",
+  "Cách 2: thiết kế thao tác tự idempotent: tính lại từ dữ liệu gốc (SET progress = ...) thay vì cộng dồn (progress = progress + 1).",
+  "Cách 3: UPDATE có điều kiện theo trạng thái (WHERE status = 'PENDING')."
+ ],
+ pitfalls:["progress = progress + x với message có thể giao lại: tiến độ vượt 100%.","Kiểm tra trùng rồi mới ghi ở hai transaction khác nhau."],
+ iv:[{q:"Hai kết quả bài H5P giống hệt nhau tới hai lần. Tiến độ có sai không?",a:"Nếu cộng dồn thì có. Em tính lại tiến độ từ dữ liệu gốc bằng một câu UPDATE, vừa nguyên tử vừa idempotent, hoặc lưu id message đã xử lý với unique constraint."}],
+ project:"Backend H5P nhận kết quả qua RabbitMQ và tính tiến độ bài học, khóa học. Kiểm tra code đang cộng dồn hay tính lại.",
+ rel:["consumer-failures","locking","api-practices"],
+ quiz:[{q:"Cách tính tiến độ nào an toàn khi message bị giao lại?",o:["progress = progress + 10","Tính lại từ bảng kết quả gốc","Bỏ qua message thứ hai ngẫu nhiên","Tăng prefetch"],a:1,w:"Tính lại cho cùng kết quả dù chạy bao nhiêu lần."}]},
+
+{id:"outbox", r:"async", title:"Ghi DB và gửi message: bài toán ghi kép", min:9,
+ problem:"Lưu dữ liệu rồi gửi message. Transaction rollback nhưng message đã đi, hoặc commit xong mà gửi message thất bại. Hai hệ thống lệch nhau.",
+ flow:[{t:"Transaction",d:"ghi dữ liệu + ghi outbox"},{t:"Commit",d:"cùng lúc"},{t:"Relay",d:"đọc outbox"},{t:"Publish",d:"RabbitMQ"},{t:"Đánh dấu đã gửi",d:""}],
+ points:[
+  "Gửi message bên trong transaction: transaction rollback thì bên nhận vẫn xử lý dữ liệu không tồn tại.",
+  "@TransactionalEventListener(phase = AFTER_COMMIT): chỉ gửi sau khi commit. Đơn giản, nhưng nếu ứng dụng chết ngay sau commit thì message mất.",
+  "Transactional outbox: ghi message vào bảng outbox trong cùng transaction với dữ liệu. Một tiến trình khác đọc outbox và publish, xong thì đánh dấu. Không mất, có thể trùng nên bên nhận idempotent.",
+  "Cũng áp dụng cho xóa cache, gửi thông báo đẩy, gọi dịch vụ ngoài sau khi lưu."
+ ],
+ pitfalls:["Gửi thông báo trước commit.","Outbox không có cơ chế dọn bảng."],
+ iv:[{q:"Có nên gửi RabbitMQ bên trong @Transactional không?",a:"Không nên. Nếu transaction rollback thì message đã đi rồi. Tối thiểu dùng @TransactionalEventListener AFTER_COMMIT; cần chắc chắn không mất thì dùng outbox pattern: ghi message vào bảng outbox cùng transaction, tiến trình khác publish sau."}],
+ project:"Chuyển lớp xong mới cập nhật nhóm của phụ huynh; gửi thông báo xong mới cho phép thu hồi. Hai luồng này đều cần thứ tự sau commit.",
+ rel:["propagation","delivery-idempotency","case-notification"],
+ quiz:[{q:"Phương án nào đảm bảo không mất message khi app chết ngay sau commit?",o:["Gửi trong transaction","AFTER_COMMIT listener","Transactional outbox","Không gửi"],a:2,w:"Message đã nằm trong DB cùng dữ liệu."}]},
+
+/* ================= OPS ================= */
+{id:"environments", r:"ops", title:"Nhiều môi trường và cấu hình lệch", min:8,
+ problem:"Một tính năng đi local → dev → tester → staging → production. Lỗi chỉ xảy ra ở một môi trường thường do cấu hình hoặc dữ liệu lệch, không phải do code.",
+ flow:[{t:"Local",d:"tự test"},{t:"Dev",d:"tích hợp"},{t:"Tester",d:"QA"},{t:"Staging",d:"giống prod"},{t:"Production",d:"golive"}],
+ points:[
+  "Cùng một artifact (image) chạy ở mọi môi trường; chỉ cấu hình khác (12-factor). Cấu hình nằm ngoài code: biến môi trường, ConfigMap, Secret.",
+  "Lệch môi trường (drift) hay gặp: thiếu cấu hình menu hay dữ liệu danh mục, khác phiên bản service, service trỏ nhầm DB, thiếu secret.",
+  "Checklist golive: migration DB (Liquibase), cấu hình, dữ liệu danh mục, phân quyền, phiên bản các service phụ thuộc, kế hoạch quay lại.",
+  "So sánh môi trường có hệ thống: liệt kê cấu hình và phiên bản của từng môi trường để thấy lệch ở đâu."
+ ],
+ pitfalls:["Sửa tay trên production mà không ghi lại.","Dùng chung DB giữa các môi trường."],
+ iv:[{q:"Kể một lỗi chỉ xảy ra trên một môi trường.",a:"Kể theo: triệu chứng, cách khoanh vùng (so cấu hình, phiên bản, dữ liệu giữa các môi trường), nguyên nhân, cách sửa, và đã thêm gì để không lặp lại (checklist, script)."}],
+ project:"Chị từng gặp: thiếu cấu hình menu quản lý, server lệch so với môi trường khác, service nối nhầm DB, service không start. Chọn một vụ để kể chi tiết.",
+ rel:["k8s-basics","observability","case-school"],
+ quiz:[{q:"Nguyên tắc 12-factor về cấu hình là gì?",o:["Cấu hình viết cứng trong code","Cùng artifact, cấu hình lấy từ môi trường","Mỗi môi trường build một bản khác","Lưu cấu hình trong DB chung"],a:1,w:"Tách cấu hình khỏi code."}]},
+
+{id:"k8s-basics", r:"ops", title:"Kubernetes cho dev backend", min:9,
+ problem:"Service không start, pod khởi động lại liên tục, traffic tới pod chưa sẵn sàng. Cần đủ hiểu Kubernetes để tự chẩn đoán.",
+ flow:[{t:"Deployment",d:"số bản sao, image"},{t:"Pod",d:"container chạy app"},{t:"Probe",d:"readiness, liveness"},{t:"Service",d:"địa chỉ ổn định"},{t:"Ingress / Gateway",d:"vào từ ngoài"}],
+ points:[
+  "Deployment quản lý số pod và cập nhật dần (rolling update). Service cho một địa chỉ ổn định trỏ tới các pod.",
+  "Readiness probe: pod chưa sẵn sàng thì không nhận traffic. Liveness probe: pod treo thì bị khởi động lại.",
+  "CrashLoopBackOff: container khởi động rồi chết liên tục. Xem kubectl logs --previous, kubectl describe pod (sự kiện, OOMKilled, thiếu ConfigMap/Secret).",
+  "Requests/limits CPU và bộ nhớ: vượt limit bộ nhớ thì bị kill (OOMKilled).",
+  "Lệnh hay dùng: get pods, describe, logs -f, exec, rollout status, rollout undo."
+ ],
+ pitfalls:["Liveness gọi tới DB: DB chậm làm mọi pod bị khởi động lại dây chuyền.","Không có readiness: request rơi vào pod đang khởi động."],
+ iv:[{q:"Service không start được trên một môi trường, em làm gì?",a:"Xem trạng thái pod và sự kiện (describe), đọc log lần chạy trước, kiểm tra ConfigMap, Secret, kết nối DB và phiên bản image so với môi trường chạy được. Khoanh vùng xem là do cấu hình, tài nguyên hay code."}],
+ project:"Chị dùng Lens để xem pod và log trên ba môi trường. Hãy tập nói lại bằng các khái niệm trong bài này.",
+ rel:["environments","observability","resilience"],
+ quiz:[{q:"Pod chưa sẵn sàng mà vẫn nhận request. Thiếu cấu hình nào?",o:["Liveness","Readiness","HPA","Ingress"],a:1,w:"Readiness quyết định có nhận traffic."}]},
+
+{id:"observability", r:"ops", title:"Log, metric, trace: điều tra sự cố", min:8,
+ problem:"Lỗi trên production mà không tái hiện được ở local. Thứ duy nhất có là dữ liệu quan sát.",
+ flow:[{t:"Cảnh báo",d:"metric vượt ngưỡng"},{t:"Metric",d:"cái gì, khi nào"},{t:"Trace",d:"chậm ở service nào"},{t:"Log",d:"chi tiết, traceId"},{t:"Nguyên nhân",d:""}],
+ points:[
+  "Log có cấu trúc (JSON) kèm traceId, user, tenant để lọc nhanh.",
+  "Metric: số request, tỷ lệ lỗi, độ trễ p95/p99, số connection pool đang dùng, độ dài queue. Spring Boot Actuator + Micrometer.",
+  "Trace phân tán: một traceId đi xuyên qua gateway và các service, thấy chậm ở chặng nào.",
+  "Quy trình điều tra: xác định phạm vi (môi trường, thời điểm, người dùng), tìm thay đổi gần nhất, đọc metric, đi theo trace, đọc log, tái hiện, sửa, viết lại để không lặp."
+ ],
+ pitfalls:["Log thiếu ngữ cảnh: chỉ có 'Error occurred'.","Ghi dữ liệu nhạy cảm vào log."],
+ iv:[{q:"Kể một lần điều tra sự cố production.",a:"Theo khung: triệu chứng và ảnh hưởng, dữ liệu đã xem (log, metric), giả thuyết đã loại, nguyên nhân gốc, cách sửa, việc làm thêm để không lặp lại."}],
+ project:"Chọn một vụ thật: DW-2557 điều tra lỗi entityevent prod, DW-2567 trắng trang prod hoặc DW-2479 DB staging không lên. Mở lại ticket trước khi kể.",
+ rel:["k8s-basics","exception-handling","environments"],
+ quiz:[{q:"Thứ gì nối log của nhiều service cho cùng một request?",o:["Pod name","traceId","Thời gian","IP"],a:1,w:"traceId đi theo request qua các service."}]},
+
+{id:"resilience", r:"ops", title:"Timeout, retry, circuit breaker", min:8,
+ problem:"Một dịch vụ ngoài chậm có thể kéo sập cả hệ thống nếu mọi thread đều ngồi chờ nó.",
+ flow:[{t:"Gọi dịch vụ ngoài",d:""},{t:"Timeout",d:"không chờ mãi"},{t:"Retry",d:"giãn cách, giới hạn"},{t:"Circuit breaker",d:"lỗi nhiều thì ngắt"},{t:"Fallback",d:"phản hồi thay thế"}],
+ points:[
+  "Timeout là lớp quan trọng nhất: connect timeout và read timeout cho mọi lời gọi ra ngoài.",
+  "Retry chỉ cho lỗi tạm thời và thao tác idempotent; có giãn cách và jitter để không dồn tải.",
+  "Circuit breaker (Resilience4j): tỷ lệ lỗi cao thì ngắt, trả lỗi nhanh, sau một lúc thử lại.",
+  "Bulkhead: tách pool riêng cho từng dịch vụ ngoài để một bên chậm không ăn hết thread.",
+  "Fallback: dữ liệu cache, thông báo thân thiện, xếp hàng xử lý sau."
+ ],
+ pitfalls:["Retry thao tác ký hoặc thanh toán không idempotent.","Timeout của Feign bị comment."],
+ iv:[{q:"Gọi SmartCA bị chậm, hệ thống em bị ảnh hưởng thế nào và em phòng thế nào?",a:"Không có timeout thì mỗi lời gọi giữ một thread và có thể cả connection DB nếu nằm trong transaction, chậm lâu là cạn pool. Em đặt timeout, gọi ngoài transaction, giới hạn số lời gọi đồng thời, và dùng circuit breaker để trả lỗi nhanh khi SmartCA đang có sự cố."}],
+ project:"Bật lại timeout cho Feign trong service entity là một cải tiến cụ thể có thể đề xuất.",
+ rel:["pools","consumer-failures","case-school"],
+ quiz:[{q:"Lớp phòng vệ cơ bản nhất khi gọi dịch vụ ngoài?",o:["Circuit breaker","Timeout","Cache","Log"],a:1,w:"Không có timeout thì các lớp khác cũng vô dụng."}]},
+
+/* ================= DESIGN ================= */
+{id:"design-framework", r:"design", title:"Khung trả lời một bài thiết kế", min:10,
+ problem:"Bài thiết kế hệ thống không có đáp án duy nhất. Người phỏng vấn chấm cách suy nghĩ: hỏi rõ yêu cầu, ước lượng, chọn giải pháp và nói được đánh đổi.",
+ flow:[{t:"Yêu cầu",d:"chức năng + phi chức năng"},{t:"Ước lượng",d:"người dùng, QPS, dữ liệu"},{t:"API + dữ liệu",d:""},{t:"Kiến trúc tổng",d:"sơ đồ khối"},{t:"Đào sâu",d:"điểm nghẽn, lỗi"},{t:"Đánh đổi",d:""}],
+ points:[
+  "Hỏi trước khi vẽ: ai dùng, làm được gì, bao nhiêu người, cần nhanh cỡ nào, mất dữ liệu có chấp nhận được không.",
+  "Ước lượng thô: 4.700 người dùng, giờ cao điểm 20% online, mỗi người 1 request/10 giây → khoảng 100 request/giây.",
+  "Thiết kế API và mô hình dữ liệu trước khi chọn công nghệ.",
+  "Vẽ khối: client, gateway, các service, DB, cache, queue. Rồi đi theo một request qua sơ đồ.",
+  "Đào sâu vào chỗ hỏng: một thành phần chết thì sao, tải gấp 10 thì sao, dữ liệu lệch thì sao.",
+  "Câu nào cũng kết bằng đánh đổi: được gì, mất gì, vì sao chọn."
+ ],
+ pitfalls:["Vẽ ngay Kafka, microservices khi chưa hỏi quy mô.","Chỉ nói công nghệ, không nói lý do."],
+ iv:[{q:"Thiết kế hệ thống gửi thông báo cho cả trường.",a:"Xem bài \"Thiết kế: thông báo và thu hồi\"."}],
+ project:"Hệ thống trường học của chị là chất liệu tốt nhất cho mọi bài thiết kế: chị biết yêu cầu thật, quy mô thật và các chỗ từng hỏng.",
+ rel:["case-notification","case-school","littles-law"],
+ quiz:[{q:"Bước đầu tiên khi nhận đề thiết kế?",o:["Chọn database","Hỏi rõ yêu cầu và quy mô","Vẽ microservices","Viết code"],a:1,w:"Không có yêu cầu thì không có lựa chọn đúng."}]},
+
+{id:"case-notification", r:"design", title:"Thiết kế: gửi và thu hồi thông báo", min:12,
+ problem:"Gửi thông báo cho hàng nghìn phụ huynh, đẩy lên điện thoại, và cho phép thu hồi thông báo đã gửi, kể cả xóa thông báo đẩy đã hiện.",
+ flow:[{t:"Tạo thông báo",d:"API"},{t:"Lưu + outbox",d:"cùng transaction"},{t:"Fan-out",d:"theo người nhận, qua queue"},{t:"Push",d:"FCM / APNs"},{t:"Thu hồi",d:"đánh dấu + push xóa"}],
+ points:[
+  "Tách \"tạo thông báo\" khỏi \"gửi tới từng người\": API chỉ lưu và trả về nhanh; việc gửi chạy nền qua queue.",
+  "Lưu theo hai bảng: thông báo (nội dung) và người nhận (trạng thái gửi, đã đọc). Danh sách chưa đọc cần index (user_id, read).",
+  "Gửi theo lô qua RabbitMQ, retry cho lỗi tạm thời, DLQ cho lỗi vĩnh viễn, idempotent theo (notification_id, user_id).",
+  "Thu hồi: đánh dấu thông báo đã thu hồi (không xóa cứng để còn lịch sử), người nhận chưa đọc không thấy nữa, gửi push dạng im lặng để app xóa thông báo đã hiện.",
+  "Với EAV, thu hồi phức tạp vì phải tìm và cập nhật mọi bản ghi người nhận liên quan; làm theo lô, có thể chạy lại.",
+  "Nhắc hạn tự động (hợp đồng sắp hết, giáo viên đi làm lại): job định kỳ chọn đối tượng, tạo thông báo qua đúng luồng trên."
+ ],
+ pitfalls:["Gửi push đồng bộ trong request tạo thông báo: chậm và dễ timeout.","Thu hồi bằng xóa cứng: mất dấu vết."],
+ iv:[{q:"Làm sao thu hồi một thông báo đã gửi?",a:"Đánh dấu thu hồi trên bản ghi thông báo, ẩn với người nhận; gửi push im lặng để ứng dụng xóa thông báo đã hiện trên Android và iOS; làm theo lô qua queue, idempotent để chạy lại được; giữ lịch sử thay vì xóa cứng."}],
+ project:"Đây là luồng chị đã làm thật. Kể theo khung yêu cầu → thiết kế → chỗ khó (EAV, push đã hiện) → cách xử lý.",
+ rel:["outbox","consumer-failures","eav"],
+ quiz:[{q:"Vì sao không gửi push ngay trong request tạo thông báo?",o:["Push không cho phép","Chậm, dễ timeout và lỗi một người nhận làm hỏng cả request","Tốn RAM","Không có lý do"],a:1,w:"Tách ra chạy nền qua queue."}]},
+
+{id:"case-school", r:"design", title:"Thiết kế: hệ thống quản lý trường", min:12,
+ problem:"Tổng hợp mọi thứ: nhiều trường (tenant), nhiều vai trò, ký số, thu phí, LMS. Đây là bài chị có thể vẽ từ kinh nghiệm thật.",
+ flow:[{t:"Web / App",d:""},{t:"Gateway",d:"JWT, tenant, định tuyến"},{t:"Services",d:"user, entity, event, ký số..."},{t:"PostgreSQL",d:"EAV"},{t:"Redis",d:"quyền, menu"},{t:"RabbitMQ",d:"sự kiện, H5P"}],
+ points:[
+  "Danh tính và phân quyền: JWT access/refresh, tenant từ token, RBAC theo vai trò và chức vụ, quyền chi tiết cache trong Redis.",
+  "Dữ liệu: EAV cho linh hoạt giữa các sản phẩm; nghiệp vụ nhiều thực thể gói trong transaction; tìm kiếm gộp truy vấn để tránh N+1.",
+  "Ký số: gọi SmartCA ngoài transaction, có timeout, chặn ký trùng bằng UPDATE có điều kiện, ký nhiều file một giao dịch.",
+  "Bất đồng bộ: kết quả H5P, thông báo, đồng bộ nhóm qua RabbitMQ; retry, DLQ, consumer idempotent.",
+  "Vận hành: ba môi trường trên Kubernetes, cấu hình tách khỏi code, checklist golive.",
+  "Điểm có thể cải thiện: tenant chỉ lấy từ token, GET cho tìm kiếm đơn giản, outbox cho message quan trọng, bật timeout Feign, giám sát DLQ."
+ ],
+ pitfalls:["Kể như liệt kê công nghệ. Hãy đi theo một luồng cụ thể (ký số, chuyển lớp) qua sơ đồ."],
+ iv:[{q:"Nếu được thiết kế lại hệ thống hiện tại, em đổi gì?",a:"Chọn hai ba điểm có lý do: tenant lấy hoàn toàn từ token; outbox cho các sự kiện quan trọng; GET cho tìm kiếm đơn giản; timeout và circuit breaker cho dịch vụ ngoài; cân nhắc jsonb thay EAV cho phần thuộc tính động."}],
+ project:"Bài cuối của bản đồ. Tự vẽ sơ đồ hệ thống của chị ra giấy, rồi đi theo luồng ký số và luồng chuyển lớp từ đầu đến cuối.",
+ rel:["multi-tenant","rbac","case-notification","environments"],
+ quiz:[{q:"Gọi SmartCA nên đặt ở đâu so với transaction?",o:["Bên trong transaction để rollback được","Bên ngoài transaction, có timeout","Trong filter","Trong consumer không ack"],a:1,w:"Không giữ connection và khóa trong lúc chờ dịch vụ ngoài."}]}
+);
+
+const GLOSSARY = [
+ ["HTTP method","http","GET, POST, PUT, PATCH, DELETE: hành động trên tài nguyên.","rest-design"],
+ ["Idempotent","http","Gọi nhiều lần cho cùng kết quả như gọi một lần (GET, PUT, DELETE).","rest-design"],
+ ["Safe method","http","Method không làm thay đổi dữ liệu (GET, HEAD).","rest-design"],
+ ["401 Unauthorized","http","Chưa xác thực: thiếu hoặc sai token.","http-basics"],
+ ["403 Forbidden","http","Đã xác thực nhưng không có quyền.","http-basics"],
+ ["409 Conflict","http","Xung đột với trạng thái hiện tại, ví dụ ký hồ sơ đã ký.","exception-handling"],
+ ["Keyset pagination","http","Phân trang theo giá trị cuối (WHERE id > ?), nhanh đều ở mọi trang.","api-practices"],
+ ["Problem Details","http","Định dạng lỗi chuẩn RFC 9457: type, title, status, detail.","api-practices"],
+ ["Idempotency key","http","Mã client gửi kèm để server nhận ra thao tác lặp.","api-practices"],
+ ["Filter chain","request","Chuỗi filter Servlet chạy trước Spring MVC, gồm Spring Security.","request-lifecycle"],
+ ["DispatcherServlet","request","Cửa chính của Spring MVC, điều phối request tới controller.","request-lifecycle"],
+ ["HandlerMapping","request","Tìm hàm controller ứng với URL và method.","request-lifecycle"],
+ ["HttpMessageConverter","request","Chuyển body JSON ↔ object Java (Jackson).","binding-validation"],
+ ["@RestController","request","@Controller + @ResponseBody: trả dữ liệu thay vì tên view.","binding-validation"],
+ ["@ControllerAdvice","request","Xử lý exception tập trung cho mọi controller.","exception-handling"],
+ ["HandlerInterceptor","request","Chạy quanh handler: preHandle, postHandle, afterCompletion.","filters-interceptors"],
+ ["Authentication","security","Xác minh người gọi là ai.","authn-authz"],
+ ["Authorization","security","Quyết định người gọi được làm gì.","authn-authz"],
+ ["JWT","security","Token gồm header.payload.signature, do server ký, mang claims.","jwt"],
+ ["Claim","security","Thông tin trong JWT: sub, exp, iat, role, tenant.","jwt"],
+ ["Refresh token","security","Token dài hạn để đổi lấy access token mới, thu hồi được.","access-refresh"],
+ ["Token rotation","security","Mỗi lần làm mới cấp refresh token mới, vô hiệu cái cũ.","access-refresh"],
+ ["Tenant","security","Một khách hàng (trường) dùng chung hệ thống, dữ liệu cách ly.","multi-tenant"],
+ ["RBAC","security","Phân quyền theo vai trò: user ↔ role ↔ permission.","rbac"],
+ ["SecurityContext","security","Nơi lưu người dùng đã xác thực cho request hiện tại.","authn-authz"],
+ ["ACID","data","Atomicity, Consistency, Isolation, Durability.","transactions"],
+ ["MVCC","data","Nhiều phiên bản của dòng; người đọc không chặn người ghi.","transactions"],
+ ["Lost update","data","Người ghi sau đè lên người ghi trước.","transactions"],
+ ["Propagation","data","Cách transaction lồng nhau: REQUIRED, REQUIRES_NEW, NESTED...","propagation"],
+ ["Rollback-only","data","Transaction bị đánh dấu chỉ được rollback.","propagation"],
+ ["UnexpectedRollbackException","data","Ném ra khi cố commit transaction đã rollback-only.","propagation"],
+ ["Optimistic lock","data","@Version: so version khi ghi, lệch thì lỗi.","locking"],
+ ["SELECT FOR UPDATE","data","Khóa dòng ngay khi đọc.","locking"],
+ ["SKIP LOCKED","data","Bỏ qua dòng đang bị khóa, dùng cho hàng đợi job.","locking"],
+ ["Deadlock","data","Hai transaction giữ khóa chéo và chờ nhau.","locking"],
+ ["B-tree","data","Index mặc định, tìm O(log n).","indexing"],
+ ["Leftmost prefix","data","Index (a,b,c) dùng được cho a, a+b, a+b+c.","indexing"],
+ ["EXPLAIN ANALYZE","data","Xem kế hoạch và thời gian thật của câu SQL.","indexing"],
+ ["N+1","data","1 câu lấy danh sách + N câu cho từng phần tử.","n-plus-one"],
+ ["EAV","data","Entity–Attribute–Value: lưu thuộc tính dạng dòng.","eav"],
+ ["Virtual thread","perf","Thread nhẹ do JVM quản lý, unmount khi chờ I/O.","threads-vt"],
+ ["Carrier thread","perf","Platform thread chạy virtual thread, số lượng bằng số nhân CPU.","threads-vt"],
+ ["Pinning","perf","Virtual thread không unmount được, giữ chặt carrier.","threads-vt"],
+ ["Định luật Little","perf","Thông lượng = số request đồng thời ÷ thời gian xử lý.","littles-law"],
+ ["p95 latency","perf","95% request nhanh hơn mức này.","littles-law"],
+ ["HikariCP","perf","Connection pool mặc định của Spring Boot (10 connection).","pools"],
+ ["Cache-aside","perf","Đọc cache, miss thì đọc DB rồi ghi cache.","caching"],
+ ["TTL","perf","Thời gian sống của một mục cache.","caching"],
+ ["Cache stampede","perf","Key hot hết hạn, nhiều request cùng đổ vào DB.","caching"],
+ ["Exchange","async","Thành phần RabbitMQ định tuyến message tới queue.","messaging-basics"],
+ ["Ack","async","Consumer xác nhận đã xử lý xong message.","messaging-basics"],
+ ["Prefetch","async","Số message tối đa consumer giữ chưa ack.","messaging-basics"],
+ ["Poison message","async","Message luôn lỗi, bị giao lại liên tục.","consumer-failures"],
+ ["DLQ","async","Dead letter queue: nơi chứa message xử lý thất bại.","consumer-failures"],
+ ["At-least-once","async","Giao ít nhất một lần, có thể trùng.","delivery-idempotency"],
+ ["Idempotent consumer","async","Xử lý cùng message nhiều lần vẫn ra cùng kết quả.","delivery-idempotency"],
+ ["Transactional outbox","async","Ghi message vào bảng outbox cùng transaction, publish sau.","outbox"],
+ ["AFTER_COMMIT","async","Pha của @TransactionalEventListener: chạy sau khi commit.","outbox"],
+ ["12-factor config","ops","Cấu hình lấy từ môi trường, không viết cứng trong code.","environments"],
+ ["Configuration drift","ops","Các môi trường lệch nhau dần về cấu hình.","environments"],
+ ["Readiness probe","ops","Kiểm tra pod sẵn sàng nhận traffic chưa.","k8s-basics"],
+ ["Liveness probe","ops","Kiểm tra pod còn sống, không thì khởi động lại.","k8s-basics"],
+ ["CrashLoopBackOff","ops","Container khởi động rồi chết liên tục.","k8s-basics"],
+ ["traceId","ops","Mã theo dõi một request qua nhiều service.","observability"],
+ ["Circuit breaker","ops","Ngắt gọi dịch vụ đang lỗi nhiều, trả lỗi nhanh.","resilience"],
+ ["Bulkhead","ops","Tách tài nguyên riêng cho từng phụ thuộc.","resilience"],
+ ["Fan-out","design","Một sự kiện tỏa ra thành nhiều việc cho nhiều người nhận.","case-notification"],
+ ["Back-of-envelope","design","Ước lượng thô quy mô trước khi thiết kế.","design-framework"]
+];
+
+const ROADMAP = [
+ {w:1, t:"Hành trình một request", goal:"Tự vẽ được đường đi của một request trong hệ thống của mình, từ FE tới DB và quay về.", lessons:["http-basics","request-lifecycle","binding-validation","exception-handling"], lab:"lab-request", out:"Viết một trang: request ký số đi qua những tầng nào."},
+ {w:2, t:"REST đúng chuẩn", goal:"Giải thích và bảo vệ được thiết kế API, kể cả chỗ lệch chuẩn.", lessons:["rest-design","api-practices","filters-interceptors"], lab:"lab-rest", out:"Liệt kê 10 API của dự án, đánh giá đúng chuẩn hay không và vì sao."},
+ {w:3, t:"Bảo mật và tenant", goal:"Trả lời trơn tru về JWT, đổi quyền, tenant.", lessons:["authn-authz","jwt","access-refresh","multi-tenant","rbac"], lab:"lab-jwt", out:"Mở code: tenant được đọc ở đâu, có đối chiếu với token không."},
+ {w:4, t:"Transaction và khóa", goal:"Giải thích transaction lồng nhau và chống ký trùng.", lessons:["transactions","propagation","locking"], lab:"lab-tx", out:"Dựng ba bean A, B, C trong project demo, chạy đủ bốn trường hợp propagation."},
+ {w:5, t:"Dữ liệu và hiệu năng truy vấn", goal:"Nói được EAV, index, N+1 bằng ví dụ của mình.", lessons:["indexing","n-plus-one","eav"], lab:"lab-index", out:"Chạy EXPLAIN ANALYZE cho một truy vấn search EAV thật."},
+ {w:6, t:"Bất đồng bộ", goal:"Trả lời được câu consumer lỗi và message trùng.", lessons:["messaging-basics","consumer-failures","delivery-idempotency","outbox"], lab:"lab-mq", out:"Đọc MessageReceiver: ack lúc nào, lỗi thì message đi đâu."},
+ {w:7, t:"Hiệu năng và vận hành", goal:"Tìm nút thắt bằng số liệu; kể một sự cố production.", lessons:["threads-vt","littles-law","pools","caching","environments","k8s-basics","observability","resilience"], lab:"lab-throughput", out:"Viết lại một sự cố thật theo khung: triệu chứng, điều tra, nguyên nhân, sửa, phòng."},
+ {w:8, t:"Thiết kế hệ thống", goal:"Trình bày hệ thống trường học trong 10 phút, có sơ đồ và đánh đổi.", lessons:["design-framework","case-notification","case-school"], lab:"lab-cache", out:"Hai bài thi thử đạt trên 75%, một buổi phỏng vấn thử."}
+];
+/* ---------- icons ---------- */
+const IC = {
+ globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 3 2.5 15 0 18M12 3c-2.5 3-2.5 15 0 18"/>',
+ route:'<circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5"/>',
+ shield:'<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/>',
+ db:'<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/>',
+ gauge:'<path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l4-6"/><circle cx="12" cy="17" r="1.5"/>',
+ queue:'<rect x="3" y="5" width="4" height="14" rx="1"/><rect x="10" y="5" width="4" height="14" rx="1"/><path d="M17 12h4M19 10l2 2-2 2"/>',
+ server:'<rect x="4" y="4" width="16" height="7" rx="2"/><rect x="4" y="13" width="16" height="7" rx="2"/><path d="M8 7.5h.01M8 16.5h.01"/>',
+ summit:'<path d="M3 20l6-10 4 6 3-4 5 8z"/><path d="M9 10V4l4 2-4 2"/>',
+ home:'<path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/>',
+ map:'<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>',
+ path:'<path d="M5 19c4 0 3-6 7-6s3-6 7-6"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="7" r="2"/>',
+ cards:'<rect x="4" y="6" width="13" height="15" rx="2"/><path d="M8 3h11a1 1 0 0 1 1 1v13"/>',
+ target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/>',
+ exam:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/>',
+ flask:'<path d="M9 3h6M10 3v6L4.5 18.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7 15h10"/>',
+ book:'<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/>',
+ search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
+ flame:'<path d="M12 21c4 0 7-2.7 7-6.5 0-3.3-2.4-5.6-4-7.5-.5 2-1.6 3-3 3.5.3-2.7-.8-5.6-3-7.5-.3 3.4-4 6-4 10.5C5 18.3 8 21 12 21z"/>',
+ bolt:'<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+ arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',
+ check:'<path d="M5 12l5 5 9-10"/>',
+ play:'<path d="M7 4l12 8-12 8z"/>'
+};
+const ic = (n,extra='') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ${extra}>${IC[n]||''}</svg>`;
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $ = s => document.querySelector(s);
+
+/* ---------- data helpers ---------- */
+const RG = Object.fromEntries(REGIONS.map(r=>[r.id,r]));
+const LS = Object.fromEntries(LESSONS.map(l=>[l.id,l]));
+REGIONS.forEach(r=>r.lessons = LESSONS.filter(l=>l.r===r.id).map(l=>l.id));
+const ORDER = ROADMAP.flatMap(w=>w.lessons);
+const QUIZ = LESSONS.flatMap(l=>l.quiz.map((q,i)=>({...q,id:l.id+'#'+i,les:l.id,r:l.r})));
+const CARDS = LESSONS.flatMap(l=>l.iv.map((c,i)=>({...c,id:l.id+'@'+i,les:l.id,r:l.r})));
+
+/* ---------- state ---------- */
+const KEY='hanh-trinh-backend';
+const today = () => new Date().toISOString().slice(0,10);
+let S = {done:{},labs:{},xp:0,qa:{},exams:[],cards:{},day:{d:'',xp:0},streak:{last:'',n:0},labTries:{}};
+try{ const raw=localStorage.getItem(KEY); if(raw) S=Object.assign(S,JSON.parse(raw)); }catch(e){}
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+function addXP(n,why){
+  if(!n) return;
+  S.xp+=n;
+  if(S.day.d!==today()) S.day={d:today(),xp:0};
+  S.day.xp+=n;
+  const t=today();
+  if(S.streak.last!==t){
+    const y=new Date(Date.now()-864e5).toISOString().slice(0,10);
+    S.streak.n = S.streak.last===y ? S.streak.n+1 : 1; S.streak.last=t;
+  }
+  save(); toast(`+${n} XP · ${why}`); renderRail();
+}
+const level = () => Math.floor(S.xp/200)+1;
+let toastT; function toast(m){ document.querySelectorAll('.toast').forEach(e=>e.remove()); const d=document.createElement('div'); d.className='toast'; d.textContent=m; document.body.appendChild(d); clearTimeout(toastT); toastT=setTimeout(()=>d.remove(),2200); }
+function labDone(id){ if(!S.labs[id]){ S.labs[id]=true; save(); addXP(40,'hoàn thành lab'); } }
+function labTry(id,key,need){ S.labTries[id]=S.labTries[id]||[]; if(!S.labTries[id].includes(key)) S.labTries[id].push(key); save(); if(S.labTries[id].length>=need) labDone(id); return S.labTries[id].length; }
+const cardsDue = () => CARDS.filter(c=>S.cards[c.id]!=='known').length;
+const nextLesson = () => ORDER.find(id=>!S.done[id]) || ORDER[0];
+const regionPct = r => Math.round(100*RG[r].lessons.filter(id=>S.done[id]).length/RG[r].lessons.length);
+const examBest = () => S.exams.length ? Math.max(...S.exams.map(e=>e.pct)) : 0;
+
+/* ---------- shell ---------- */
+const NAV=[
+ ['h','Hành trình'],['home','Trang chủ','home'],['map','Bản đồ','map'],['roadmap','Lộ trình','path'],
+ ['h','Luyện tập'],['cards','Ôn thẻ','cards'],['practice','Luyện câu hỏi','target'],['exam','Thi thử','exam'],
+ ['h','Tài nguyên'],['labs','Lab','flask'],['ref','Tra cứu','book']
+];
+function curRoute(){ const h=(location.hash||'#home').slice(1); return h||'home'; }
+function navKey(r){ if(r.startsWith('lesson-')||r.startsWith('map')) return 'map'; if(r.startsWith('lab-')) return 'labs'; return r; }
+function renderRail(){
+  const k=navKey(curRoute()), lv=level(), into=S.xp%200;
+  $('#rail').innerHTML = `<a class="brand" href="#home"><span class="brand-mark">BE</span>Hành trình Backend</a>`+
+   NAV.map(n=> n[0]==='h' ? `<div class="rail-h">${n[1]}</div>` :
+     `<a class="nav" href="#${n[0]}" ${k===n[0]?'aria-current="page"':''}>${ic(n[2])}${n[1]}${n[0]==='cards'&&cardsDue()?`<span class="count">${cardsDue()}</span>`:''}</a>`).join('')+
+   `<div class="lvl"><div class="lvl-top"><span>Cấp ${lv}</span><span>${S.xp} XP</span></div><div class="bar"><i style="width:${into/2}%"></i></div><span class="muted" style="font-size:12px">Còn ${200-into} XP lên cấp ${lv+1}</span></div>`;
+  $('#mnav').innerHTML = NAV.filter(n=>n[0]!=='h').map(n=>`<a href="#${n[0]}" ${k===n[0]?'aria-current="page"':''}>${n[1]}</a>`).join('');
+  $('#xpPill').innerHTML = `${ic('bolt')}${S.xp}`;
+  $('#streakPill').innerHTML = `${ic('flame')}${S.streak.last===today()||S.streak.last===new Date(Date.now()-864e5).toISOString().slice(0,10)?S.streak.n:0}`;
+}
+function setTitle(t){ $('#pageTitle').textContent=t; }
+
+/* ---------- router ---------- */
+let cleanup=null;
+function route(){
+  if(cleanup){ cleanup(); cleanup=null; }
+  const r=curRoute(), v=$('#view');
+  renderRail(); window.scrollTo(0,0);
+  if(r==='home') return viewHome(v);
+  if(r==='map'||r.startsWith('map-')) return viewMap(v, r.startsWith('map-')?r.slice(4):null);
+  if(r.startsWith('lesson-') && LS[r.slice(7)]) return viewLesson(v, r.slice(7));
+  if(r==='roadmap') return viewRoadmap(v);
+  if(r==='labs') return viewLabs(v);
+  if(r.startsWith('lab-') && LABS.find(l=>l.id===r)) return viewLab(v, r);
+  if(r==='ref') return viewRef(v);
+  if(r==='practice') return viewPractice(v);
+  if(r==='cards') return viewCards(v);
+  if(r==='exam') return viewExam(v);
+  viewHome(v);
+}
+window.addEventListener('hashchange',route);
+
+/* ---------- home ---------- */
+function viewHome(v){
+  setTitle('Trang chủ');
+  const nl=LS[nextLesson()], done=Object.keys(S.done).filter(k=>LS[k]).length, labs=Object.keys(S.labs).length;
+  const dayXP = S.day.d===today()?S.day.xp:0;
+  const wk = ROADMAP.find(w=>w.lessons.some(id=>!S.done[id])) || ROADMAP[ROADMAP.length-1];
+  const acc = REGIONS.map(r=>{ const qs=QUIZ.filter(q=>q.r===r.id && S.qa[q.id]!==undefined); const ok=qs.filter(q=>S.qa[q.id]).length; return {r,n:qs.length,p:qs.length?ok/qs.length:null}; });
+  const weak = acc.filter(a=>a.n>0).sort((a,b)=>a.p-b.p).slice(0,3);
+  const hr=new Date().getHours(), greet = hr<11?'Chào buổi sáng':hr<18?'Chào buổi chiều':'Chào buổi tối';
+  v.innerHTML = `
+  <div class="card hero">
+    <div>
+      <div class="muted" style="font-weight:600;margin-bottom:6px">${greet}, Tú</div>
+      <h2>Hiểu backend <em>từ bên trong</em>, kể được bằng chính hệ thống của mình.</h2>
+      <p>Mỗi bài đi từ một vấn đề thật, có sơ đồ, câu hỏi phỏng vấn mẫu và phần liên hệ với hệ thống trường học. Bản đồ chia theo chủ đề, nhảy sang chủ đề nào cũng được.</p>
+      <div class="chips"><a class="btn pri" href="#lesson-${nl.id}">${ic('play')}Tiếp tục: ${esc(nl.title)}</a><a class="btn" href="#map">${ic('map')}Mở bản đồ</a></div>
+    </div>
+    <div class="hero-flow"><span>Client</span>→<span>Gateway · JWT</span>→<span>Filter</span>→<span>DispatcherServlet</span>→<span>Service · @Transactional</span>→<span>PostgreSQL</span>→<span>RabbitMQ</span></div>
+  </div>
+  <div class="grid g4" style="margin-top:14px">
+    ${stat('Tổng XP',S.xp,`Cấp ${level()}`,(S.xp%200)/2,'var(--xp)')}
+    ${stat('Bài học',done,`/ ${LESSONS.length}`,100*done/LESSONS.length)}
+    ${stat('Lab',labs,`/ ${LABS.length}`,100*labs/LABS.length,'var(--r3)')}
+    ${stat('Thi thử tốt nhất',examBest(),'%',examBest(),'var(--good)')}
+  </div>
+  <div class="grid g2" style="margin-top:14px">
+    <div class="card pad">
+      <div style="display:flex;justify-content:space-between;align-items:center"><b>Mục tiêu hôm nay</b><span class="pill" style="color:var(--xp)">${dayXP} / 50 XP</span></div>
+      <div class="bar" style="margin:10px 0 8px"><i style="width:${Math.min(100,dayXP*2)}%"></i></div>
+      <a class="task" href="#lesson-${nl.id}"><span class="ic">${ic('book')}</span><span><b>Học một bài</b><small>${esc(nl.title)} · ${nl.min} phút</small></span></a>
+      <a class="task" href="#cards"><span class="ic">${ic('cards')}</span><span><b>Ôn thẻ phỏng vấn</b><small>${cardsDue()} thẻ chưa thuộc</small></span></a>
+      <a class="task" href="#practice"><span class="ic">${ic('target')}</span><span><b>Làm một bộ câu hỏi</b><small>Theo chủ đề hoặc trộn</small></span></a>
+    </div>
+    <div class="card pad">
+      <div style="display:flex;justify-content:space-between;align-items:center"><b>Tuần ${wk.w} · ${esc(wk.t)}</b><a class="btn sm" href="#roadmap">Lộ trình</a></div>
+      <p class="muted" style="margin:8px 0 10px;font-size:14px">${esc(wk.goal)}</p>
+      <div class="chips">${wk.lessons.map(id=>`<a class="chip" href="#lesson-${id}">${S.done[id]?'✓ ':''}${esc(LS[id].title)}</a>`).join('')}</div>
+      <div class="week">${['T2','T3','T4','T5','T6','T7','CN'].map((d,i)=>`<span class="${i===((new Date().getDay()+6)%7)&&dayXP>0?'on':''}">${d}</span>`).join('')}</div>
+    </div>
+  </div>
+  <div class="h-sec">Chủ đề trên bản đồ</div>
+  <div class="grid g4">${REGIONS.map(r=>`<a class="card labcard" href="#map-${r.id}" style="--rc:${r.hue}"><span class="ic">${ic(r.icon)}</span><h4>${esc(r.name)}</h4><p>${esc(r.tag)}</p><div class="bar"><i style="width:${regionPct(r.id)}%;background:${r.hue}"></i></div></a>`).join('')}</div>
+  ${weak.length?`<div class="h-sec">Cần củng cố</div><div class="grid g3">${weak.map(a=>`<a class="card labcard" href="#map-${a.r.id}" style="--rc:${a.r.hue}"><h4>${esc(a.r.name)}</h4><p>Trả lời đúng ${Math.round(a.p*100)}% (${a.n} câu đã làm)</p></a>`).join('')}</div>`:''}`;
+}
+function stat(k,v,sub,p,c){ return `<div class="card stat"><div><div class="k">${k}</div><div class="v">${v} <small>${sub}</small></div></div><div class="ring" style="--p:${Math.round(p)};--c:${c||'var(--accent)'}" data-l="${Math.round(p)}%"></div></div>`; }
+
+/* ---------- map ---------- */
+function viewMap(v,focus){
+  setTitle('Bản đồ');
+  const nxt=nextLesson();
+  v.innerHTML = `<div class="jump"><div class="chips">${REGIONS.map(r=>`<a class="chip" href="#map-${r.id}"><span class="dot" style="background:${r.hue}"></span>${esc(r.name)}</a>`).join('')}</div></div>`+
+  REGIONS.map(r=>{
+    const d=r.lessons.filter(id=>S.done[id]).length;
+    return `<section class="card region" id="rg-${r.id}" style="--rc:${r.hue}">
+      <div class="region-h"><span class="region-ic" style="background:${r.hue}">${ic(r.icon)}</span><div><h3>${esc(r.name)}</h3><p>${esc(r.tag)}</p></div>
+      <div class="region-prog">${d}/${r.lessons.length} bài<div class="bar"><i style="width:${100*d/r.lessons.length}%"></i></div></div></div>
+      <div class="trail">${r.lessons.map(id=>{const l=LS[id];return `<a class="stn ${S.done[id]?'done':''} ${id===nxt?'next':''}" href="#lesson-${id}"><span class="node">${ic(r.icon)}${S.done[id]?'<span class="ok">✓</span>':''}</span><span class="lbl">${esc(l.title)}</span><span class="meta">${l.min} phút · ${l.quiz.length} câu hỏi</span></a>`}).join('')}</div>
+    </section>`;}).join('');
+  if(focus){ const el=document.getElementById('rg-'+focus); if(el) setTimeout(()=>el.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'}),30); }
+}
+
+/* ---------- lesson ---------- */
+function viewLesson(v,id){
+  const l=LS[id], r=RG[l.r], idx=r.lessons.indexOf(id);
+  const prev=r.lessons[idx-1], next=r.lessons[idx+1];
+  const labs=LABS.filter(x=>x.les.includes(id));
+  setTitle(l.title);
+  v.style.setProperty('--rc',r.hue);
+  v.innerHTML = `
+   <div class="les-head"><a class="tag" href="#map-${r.id}"><span class="dot" style="background:${r.hue}"></span>${esc(r.name)} · bài ${idx+1}/${r.lessons.length}</a><span class="tag">${l.min} phút</span>${S.done[id]?'<span class="tag" style="color:var(--good)">✓ Đã hoàn thành</span>':''}</div>
+   <h2 class="les-title">${esc(l.title)}</h2>
+   <div class="les-grid" style="--rc:${r.hue}">
+    <div style="display:grid;gap:18px;min-width:0">
+      <p class="callout"><b>Vấn đề</b>${esc(l.problem)}</p>
+      <div class="card pad"><div class="h-sec" style="margin-top:0">Cốt lõi</div><ul class="points">${l.points.map(p=>`<li>${esc(p)}</li>`).join('')}</ul></div>
+      <div><div class="h-sec" style="margin-top:0">Bẫy hay gặp</div><ul class="pits">${l.pitfalls.map(p=>`<li>${esc(p)}</li>`).join('')}</ul></div>
+      <div><div class="h-sec" style="margin-top:0">Câu hỏi phỏng vấn · bấm để xem đáp án mẫu</div>${l.iv.map(q=>`<details class="iv"><summary>${esc(q.q)}</summary><div class="ans">${esc(q.a)}</div></details>`).join('')}</div>
+      <div class="card"><div class="pad" style="padding-bottom:0"><div class="h-sec" style="margin-top:0">Kiểm tra nhanh</div></div><div id="lq"></div></div>
+    </div>
+    <aside class="side">
+      <div class="card pad"><div class="h-sec" style="margin-top:0">Sơ đồ</div><div class="flow">${l.flow.map((f,i)=>`<div class="fnode"><span class="fnum">${i+1}</span><div class="fbox"><b>${esc(f.t)}</b>${f.d?`<span>${esc(f.d)}</span>`:''}</div></div>`).join('')}</div></div>
+      <p class="callout proj"><b>Trong hệ thống của bạn</b>${esc(l.project)}</p>
+      ${labs.length?`<div class="card pad"><div class="h-sec" style="margin-top:0">Lab liên quan</div><div class="chips">${labs.map(x=>`<a class="chip" href="#${x.id}">${ic('flask','style="width:14px;height:14px"')}${esc(x.title)}${S.labs[x.id]?' ✓':''}</a>`).join('')}</div></div>`:''}
+      <div class="card pad"><div class="h-sec" style="margin-top:0">Nhảy sang chủ đề liên quan</div><div class="chips">${l.rel.filter(x=>LS[x]).map(x=>`<a class="chip" href="#lesson-${x}"><span class="dot" style="background:${RG[LS[x].r].hue}"></span>${esc(LS[x].title)}</a>`).join('')}</div></div>
+    </aside>
+   </div>
+   <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;margin-top:24px">
+     ${prev?`<a class="btn" href="#lesson-${prev}">← ${esc(LS[prev].title)}</a>`:`<a class="btn" href="#map-${r.id}">← Về bản đồ</a>`}
+     <button class="btn pri" id="doneBtn" type="button">${S.done[id]?'Đã hoàn thành ✓':'Đánh dấu hoàn thành · +50 XP'}</button>
+     ${next?`<a class="btn" href="#lesson-${next}">${esc(LS[next].title)} →</a>`:`<a class="btn" href="#map">Chọn chủ đề khác →</a>`}
+   </div>`;
+  renderQuizList($('#lq'), l.quiz.map((q,i)=>({...q,id:id+'#'+i})));
+  $('#doneBtn').onclick=()=>{ if(S.done[id]) return; S.done[id]=true; save(); addXP(50,'hoàn thành bài'); $('#doneBtn').textContent='Đã hoàn thành ✓'; };
+  cleanup=()=>v.style.removeProperty('--rc');
+}
+function mix(q){ const idx=shuffle(q.o.map((_,i)=>i)); return {...q,o:idx.map(i=>q.o[i]),a:idx.indexOf(q.a)}; }
+function renderQuizList(el,qs,onAnswer){
+  qs=qs.map(mix);
+  el.innerHTML = qs.map((q,i)=>`<div class="q" data-i="${i}"><p>${esc(q.q)}</p><div class="opts">${q.o.map((o,j)=>`<button class="opt" type="button" data-j="${j}"><span class="lt">${'ABCD'[j]}</span><span>${esc(o)}</span></button>`).join('')}</div></div>`).join('');
+  el.querySelectorAll('.q').forEach(qe=>{
+    const q=qs[+qe.dataset.i];
+    qe.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{
+      const j=+b.dataset.j, ok=j===q.a;
+      qe.querySelectorAll('.opt').forEach(x=>{ x.disabled=true; if(+x.dataset.j===q.a) x.classList.add('right'); });
+      if(!ok) b.classList.add('wrong');
+      qe.insertAdjacentHTML('beforeend',`<div class="why"><b style="color:${ok?'var(--good)':'var(--bad)'}">${ok?'Đúng.':'Chưa đúng.'}</b> ${esc(q.w)}</div>`);
+      const first = S.qa[q.id]===undefined;
+      S.qa[q.id]=ok; save();
+      if(ok && first) addXP(10,'trả lời đúng');
+      if(onAnswer) onAnswer(ok);
+    });
+  });
+}
+
+/* ---------- roadmap ---------- */
+function viewRoadmap(v){
+  setTitle('Lộ trình 8 tuần');
+  const cur = ROADMAP.find(w=>w.lessons.some(id=>!S.done[id]));
+  v.innerHTML = `<p class="muted" style="margin:0 0 16px;max-width:70ch">Thứ tự gợi ý, bắt đầu từ những chỗ bị hỏi khó trong buổi phỏng vấn vừa rồi: đường đi của request, REST, JWT và tenant, rồi tới transaction, RabbitMQ và thiết kế. Bản đồ vẫn cho nhảy tự do; lộ trình chỉ là gợi ý thứ tự. Mỗi tuần kết thúc bằng một sản phẩm tự viết, vì người phỏng vấn chấm khả năng giải thích.</p>
+  <div class="card">${ROADMAP.map(w=>{const d=w.lessons.filter(id=>S.done[id]).length; const lab=LABS.find(x=>x.id===w.lab);
+   return `<div class="wk ${cur&&cur.w===w.w?'cur':''}"><div class="num">Tuần<b>${w.w}</b>${d}/${w.lessons.length}</div><div style="min-width:0"><h4>${esc(w.t)}</h4><p>${esc(w.goal)}</p>
+   <div class="chips">${w.lessons.map(id=>`<a class="chip" href="#lesson-${id}"><span class="dot" style="background:${RG[LS[id].r].hue}"></span>${S.done[id]?'✓ ':''}${esc(LS[id].title)}</a>`).join('')}${lab?`<a class="chip" href="#${lab.id}">${ic('flask','style="width:14px;height:14px"')}${esc(lab.title)}${S.labs[lab.id]?' ✓':''}</a>`:''}</div>
+   <div class="out"><b>Tự làm:</b> ${esc(w.out)}</div></div></div>`;}).join('')}</div>`;
+}
+
+/* ---------- reference ---------- */
+function viewRef(v){
+  setTitle('Tra cứu');
+  let cat='all', qv='';
+  v.innerHTML = `<input class="search" id="refq" type="search" placeholder="Tìm thuật ngữ: JWT, DLQ, propagation…" aria-label="Tìm thuật ngữ">
+   <div class="chips" style="margin:12px 0 16px" id="refcats"><button class="chip" type="button" data-c="all" aria-pressed="true">Tất cả</button>${REGIONS.map(r=>`<button class="chip" type="button" data-c="${r.id}" aria-pressed="false"><span class="dot" style="background:${r.hue}"></span>${esc(r.name)}</button>`).join('')}</div>
+   <div class="gl" id="gl"></div>`;
+  const draw=()=>{ const n=qv.toLowerCase(); const items=GLOSSARY.filter(g=>(cat==='all'||g[1]===cat)&&(!n||(g[0]+' '+g[2]).toLowerCase().includes(n)));
+    $('#gl').innerHTML = items.length? items.map(g=>`<a class="card term" href="#lesson-${g[3]}"><b>${esc(g[0])}</b><p>${esc(g[2])}</p><span class="ft"><span class="tag"><span class="dot" style="background:${RG[g[1]].hue}"></span>${esc(RG[g[1]].name)}</span><span class="muted">${esc(LS[g[3]].title)} →</span></span></a>`).join('') : `<div class="empty">Không có thuật ngữ khớp.</div>`; };
+  $('#refq').oninput=e=>{qv=e.target.value;draw();};
+  $('#refcats').querySelectorAll('button').forEach(b=>b.onclick=()=>{cat=b.dataset.c;$('#refcats').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));draw();});
+  draw();
+}
+
+/* ---------- practice ---------- */
+function viewPractice(v){
+  setTitle('Luyện câu hỏi');
+  const wrong = QUIZ.filter(q=>S.qa[q.id]===false);
+  v.innerHTML = `<div class="grid g2">
+   <div class="card pad"><b>Theo chủ đề</b><p class="muted" style="font-size:14px;margin:6px 0 12px">Mọi câu của một vùng trên bản đồ.</p>
+     <div class="ctl"><label for="prg">Chủ đề<select id="prg">${REGIONS.map(r=>`<option value="${r.id}">${esc(r.name)} (${QUIZ.filter(q=>q.r===r.id).length} câu)</option>`).join('')}</select></label></div>
+     <button class="btn pri" type="button" id="pgo" style="margin-top:12px">Bắt đầu ${ic('arrow')}</button></div>
+   <div class="card pad"><b>Trộn ngẫu nhiên</b><p class="muted" style="font-size:14px;margin:6px 0 12px">12 câu từ mọi chủ đề.</p><button class="btn pri" type="button" id="pmix">Bắt đầu ${ic('arrow')}</button>
+     <hr style="border:0;border-top:1px solid var(--line);margin:16px 0"><b>Câu từng làm sai</b><p class="muted" style="font-size:14px;margin:6px 0 12px">${wrong.length? wrong.length+' câu đang chờ làm lại.':'Chưa có câu sai nào.'}</p><button class="btn" type="button" id="pwr" ${wrong.length?'':'disabled'}>Làm lại câu sai</button></div>
+  </div><div id="psess"></div>`;
+  const start=(qs,title)=>{ $('#psess').innerHTML=`<div class="h-sec">${esc(title)} · ${qs.length} câu</div><div class="card" id="pq"></div><p class="muted" id="pscore" style="margin-top:10px"></p>`;
+    let ok=0,n=0; renderQuizList($('#pq'),qs,(r)=>{n++; if(r) ok++; $('#pscore').textContent=`Đã làm ${n}/${qs.length} · đúng ${ok}`;}); $('#psess').scrollIntoView({behavior:'smooth'}); };
+  $('#pgo').onclick=()=>{const r=$('#prg').value; start(shuffle(QUIZ.filter(q=>q.r===r)),RG[r].name);};
+  $('#pmix').onclick=()=>start(shuffle(QUIZ).slice(0,12),'Trộn ngẫu nhiên');
+  $('#pwr').onclick=()=>start(shuffle(QUIZ.filter(q=>S.qa[q.id]===false)),'Câu từng làm sai');
+}
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+/* ---------- flashcards ---------- */
+function viewCards(v){
+  setTitle('Ôn thẻ phỏng vấn');
+  let cat='all', onlyDue=true, deck=[], i=0, flipped=false;
+  const build=()=>{ deck=shuffle(CARDS.filter(c=>(cat==='all'||c.r===cat)&&(!onlyDue||S.cards[c.id]!=='known'))); i=0; flipped=false; draw(); };
+  v.innerHTML = `<p class="muted" style="margin:0 0 12px;max-width:70ch">Đọc câu hỏi, tự trả lời thành tiếng, rồi bấm vào thẻ để xem đáp án mẫu. Đáp án mẫu là khung; khi nói thật hãy thay bằng chi tiết hệ thống của mình.</p>
+   <div class="chips" id="ccats" style="margin-bottom:10px"><button class="chip" type="button" data-c="all" aria-pressed="true">Tất cả</button>${REGIONS.map(r=>`<button class="chip" type="button" data-c="${r.id}" aria-pressed="false"><span class="dot" style="background:${r.hue}"></span>${esc(r.name)}</button>`).join('')}</div>
+   <label class="row" style="display:flex;gap:8px;align-items:center;font-size:14px;margin-bottom:14px"><input type="checkbox" id="cdue" checked style="accent-color:var(--accent)"> Chỉ thẻ chưa thuộc</label>
+   <div id="cbox"></div>`;
+  const draw=()=>{ const c=deck[i];
+    if(!c){ $('#cbox').innerHTML=`<div class="card empty">Hết thẻ trong nhóm này. ${onlyDue?'Bỏ chọn \"Chỉ thẻ chưa thuộc\" để ôn lại tất cả.':''}</div>`; renderRail(); return; }
+    $('#cbox').innerHTML=`<div class="card flash" id="fl" role="button" tabindex="0" aria-label="Lật thẻ"><span class="side-l">${flipped?'Đáp án mẫu':'Câu hỏi'} · ${i+1}/${deck.length} · ${esc(RG[c.r].name)}</span>${flipped?`<div class="fq" style="font-size:16px;color:var(--muted)">${esc(c.q)}</div><div class="fa">${esc(c.a)}</div>`:`<div class="fq">${esc(c.q)}</div><span class="muted" style="font-size:13px">Bấm để lật · phím Space</span>`}</div>
+     <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;justify-content:space-between"><a class="btn sm" href="#lesson-${c.les}">Mở bài: ${esc(LS[c.les].title)}</a><span style="display:flex;gap:8px"><button class="btn" type="button" id="cagain">Chưa nhớ</button><button class="btn pri" type="button" id="cok">Đã nhớ</button></span></div>`;
+    const flip=()=>{flipped=!flipped;draw();};
+    $('#fl').onclick=flip; $('#fl').onkeydown=e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();flip();}};
+    $('#cagain').onclick=()=>{S.cards[c.id]='again';save();i++;flipped=false;draw();};
+    $('#cok').onclick=()=>{const was=S.cards[c.id]==='known';S.cards[c.id]='known';save();if(!was)addXP(5,'thuộc một thẻ');i++;flipped=false;draw();};
+  };
+  $('#ccats').querySelectorAll('button').forEach(b=>b.onclick=()=>{cat=b.dataset.c;$('#ccats').querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));build();});
+  $('#cdue').onchange=e=>{onlyDue=e.target.checked;build();};
+  build();
+}
+
+/* ---------- exam ---------- */
+function viewExam(v){
+  setTitle('Thi thử');
+  const hist = S.exams.slice(-5).reverse();
+  v.innerHTML = `<div class="grid g2">
+   <div class="card pad"><b>Bài nhanh</b><div style="margin:8px 0 4px"><span class="stat v" style="padding:0">15</span> câu · 20 phút</div><p class="muted" style="font-size:14px">Đạt từ 70%. Hợp để làm mỗi ngày.</p><button class="btn pri" type="button" data-n="15" data-m="20">Bắt đầu ${ic('arrow')}</button></div>
+   <div class="card pad"><b>Bài đầy đủ</b><div style="margin:8px 0 4px"><span class="stat v" style="padding:0">40</span> câu · 50 phút</div><p class="muted" style="font-size:14px">Trải đều mọi chủ đề. Có đánh dấu câu để xem lại.</p><button class="btn pri" type="button" data-n="40" data-m="50">Bắt đầu ${ic('arrow')}</button></div>
+  </div>
+  <div class="h-sec">Lần thi gần đây</div>
+  <div class="card">${hist.length? hist.map(e=>`<div class="task" style="padding:12px 18px"><span class="ic" style="color:${e.pct>=70?'var(--good)':'var(--bad)'}">${ic(e.pct>=70?'check':'target')}</span><span><b>${e.pct}% · ${e.ok}/${e.n} câu</b><small>${e.d} · ${e.pct>=70?'Đạt':'Chưa đạt'}</small></span></div>`).join(''):'<div class="empty">Chưa có lần thi nào.</div>'}</div>`;
+  v.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>runExam(v,+b.dataset.n,+b.dataset.m));
+}
+function runExam(v,n,mins){
+  // spread across regions
+  const byR = REGIONS.map(r=>shuffle(QUIZ.filter(q=>q.r===r.id)));
+  let qs=[]; while(qs.length<Math.min(n,QUIZ.length)){ byR.forEach(a=>{ if(a.length && qs.length<n) qs.push(mix(a.shift())); }); }
+  const ans=new Array(qs.length).fill(null), flag=new Array(qs.length).fill(false);
+  let cur=0, left=mins*60, done=false;
+  const t=setInterval(()=>{ left--; const el=$('#tmr'); if(el) el.textContent=fmt(left); if(left<=0) finish(); },1000);
+  cleanup=()=>clearInterval(t);
+  const fmt=s=>`${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+  const draw=()=>{ const q=qs[cur];
+    v.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px"><b>Câu ${cur+1}/${qs.length}</b><span class="timer" id="tmr">${fmt(left)}</span><button class="btn" type="button" id="esub">Nộp bài</button></div>
+    <div class="lab-wrap" style="grid-template-columns:minmax(0,1fr) minmax(0,260px)">
+     <div class="card"><div class="q"><span class="tag" style="margin-bottom:10px"><span class="dot" style="background:${RG[q.r].hue}"></span>${esc(RG[q.r].name)}</span><p style="margin-top:10px">${esc(q.q)}</p><div class="opts">${q.o.map((o,j)=>`<button class="opt ${ans[cur]===j?'sel':''}" type="button" data-j="${j}"><span class="lt">${'ABCD'[j]}</span><span>${esc(o)}</span></button>`).join('')}</div></div>
+      <div style="display:flex;justify-content:space-between;gap:8px;padding:0 18px 16px"><button class="btn sm" type="button" id="eprev" ${cur?'':'disabled'}>← Trước</button><button class="btn sm" type="button" id="eflag">${flag[cur]?'Bỏ đánh dấu':'Đánh dấu xem lại'}</button><button class="btn sm" type="button" id="enext" ${cur<qs.length-1?'':'disabled'}>Sau →</button></div></div>
+     <div class="card pad"><div class="h-sec" style="margin-top:0">Danh sách câu</div><div class="qgrid">${qs.map((_,k)=>`<button type="button" data-k="${k}" class="${ans[k]!==null?'ans':''} ${flag[k]?'flag':''} ${k===cur?'cur':''}">${k+1}</button>`).join('')}</div><p class="muted" style="font-size:12.5px;margin:12px 0 0">Đã trả lời ${ans.filter(a=>a!==null).length}/${qs.length}</p></div>
+    </div>`;
+    v.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{ans[cur]=+b.dataset.j; if(cur<qs.length-1) cur++; draw();});
+    v.querySelectorAll('.qgrid button').forEach(b=>b.onclick=()=>{cur=+b.dataset.k;draw();});
+    $('#eprev').onclick=()=>{cur--;draw();}; $('#enext').onclick=()=>{cur++;draw();};
+    $('#eflag').onclick=()=>{flag[cur]=!flag[cur];draw();};
+    $('#esub').onclick=()=>{ const un=ans.filter(a=>a===null).length; if(un && !$('#esub').dataset.c){ $('#esub').dataset.c=1; $('#esub').textContent=`Còn ${un} câu trống · bấm lần nữa để nộp`; return;} finish(); };
+  };
+  const finish=()=>{ if(done) return; done=true; clearInterval(t);
+    const ok=qs.filter((q,k)=>ans[k]===q.a).length, pct=Math.round(100*ok/qs.length);
+    S.exams.push({d:today(),n:qs.length,ok,pct}); qs.forEach((q,k)=>{ if(ans[k]!==null) S.qa[q.id]=ans[k]===q.a; }); save();
+    addXP(ok*5+(pct>=70?50:0), pct>=70?'đạt bài thi':'hoàn thành bài thi');
+    const per=REGIONS.map(r=>{const a=qs.map((q,k)=>[q,k]).filter(([q])=>q.r===r.id); return {r,n:a.length,ok:a.filter(([q,k])=>ans[k]===q.a).length};}).filter(x=>x.n);
+    v.innerHTML=`<div class="card pad" style="display:flex;flex-wrap:wrap;gap:20px;align-items:center"><div class="ring" style="--p:${pct};--c:${pct>=70?'var(--good)':'var(--bad)'};width:84px;height:84px" data-l="${pct}%"></div><div><h2 style="margin:0;font-size:24px">${pct>=70?'Đạt':'Chưa đạt'} · ${ok}/${qs.length} câu</h2><p class="muted" style="margin:4px 0 0">Ngưỡng đạt 70%. Xem lại câu sai bên dưới, mỗi câu có đường dẫn về bài học.</p></div><a class="btn" href="#exam" style="margin-left:auto">Về trang thi</a></div>
+    <div class="h-sec">Theo chủ đề</div><div class="card pad caps">${per.map(x=>`<div class="cap ${x.ok/x.n<.7?'min':''}"><span>${esc(x.r.name)}</span><span class="track"><i style="width:${100*x.ok/x.n}%"></i></span><span class="val">${x.ok}/${x.n}</span></div>`).join('')}</div>
+    <div class="h-sec">Xem lại câu sai</div><div class="card">${qs.map((q,k)=>[q,k]).filter(([q,k])=>ans[k]!==q.a).map(([q,k])=>`<div class="q"><p>${k+1}. ${esc(q.q)}</p><div class="opts">${q.o.map((o,j)=>`<div class="opt ${j===q.a?'right':''} ${j===ans[k]&&j!==q.a?'wrong':''}"><span class="lt">${'ABCD'[j]}</span><span>${esc(o)}</span></div>`).join('')}</div><div class="why">${esc(q.w)} <a href="#lesson-${q.les}">Ôn bài →</a></div></div>`).join('')||'<div class="empty">Không sai câu nào.</div>'}</div>`;
+    window.scrollTo(0,0);
+  };
+  draw();
+}
+
+/* ---------- labs list ---------- */
+function viewLabs(v){
+  setTitle('Lab');
+  v.innerHTML=`<p class="muted" style="margin:0 0 16px">${Object.keys(S.labs).length}/${LABS.length} lab đã hoàn thành. Mỗi lab mô phỏng một tình huống bị hỏi thật; thử đủ các phương án để nhận XP.</p>
+  <div class="grid g3">${LABS.map(l=>`<a class="card labcard" href="#${l.id}" style="--rc:${RG[l.r].hue}"><span class="ic">${ic(l.icon)}</span><h4>${esc(l.title)}${S.labs[l.id]?' <span style="color:var(--good)">✓</span>':''}</h4><p>${esc(l.desc)}</p><span class="ft"><span>${'●'.repeat(l.lv)}${'○'.repeat(3-l.lv)} ${['','Dễ','Vừa','Khó'][l.lv]}</span><span>~${l.min} phút</span></span></a>`).join('')}</div>`;
+}
+function viewLab(v,id){
+  const l=LABS.find(x=>x.id===id); setTitle('Lab · '+l.title);
+  v.innerHTML=`<div class="les-head"><a class="tag" href="#labs">← Tất cả lab</a><span class="tag"><span class="dot" style="background:${RG[l.r].hue}"></span>${esc(RG[l.r].name)}</span>${S.labs[id]?'<span class="tag" style="color:var(--good)">✓ Đã hoàn thành</span>':''}</div>
+   <h2 class="les-title">${esc(l.title)}</h2><p class="muted" style="margin:0 0 6px;max-width:72ch">${esc(l.desc)}</p><p style="margin:0 0 18px;font-size:14px"><b>Hoàn thành:</b> <span id="labgoal">${esc(l.goal)}</span></p>
+   <div id="labbody"></div>
+   <div class="chips" style="margin-top:20px">${l.les.map(x=>`<a class="chip" href="#lesson-${x}">Bài: ${esc(LS[x].title)}</a>`).join('')}</div>`;
+  l.run($('#labbody'));
+}
+
+/* ---------- search ---------- */
+function openSearch(){
+  const m=document.createElement('div'); m.className='modal';
+  m.innerHTML=`<div class="card box" role="dialog" aria-label="Tìm kiếm"><input class="search" id="gq" type="search" placeholder="Tìm bài học, thuật ngữ, lab…" aria-label="Tìm kiếm"><div class="sres" id="gr"></div></div>`;
+  document.body.appendChild(m);
+  const all=[...LESSONS.map(l=>({t:l.title,k:'Bài học · '+RG[l.r].name,h:'#lesson-'+l.id,s:l.title+' '+l.problem})),
+   ...GLOSSARY.map(g=>({t:g[0],k:'Thuật ngữ',h:'#lesson-'+g[3],s:g[0]+' '+g[2]})),
+   ...LABS.map(x=>({t:x.title,k:'Lab',h:'#'+x.id,s:x.title+' '+x.desc}))];
+  let sel=0, res=[];
+  const draw=q=>{ const n=q.toLowerCase().trim(); res=(n?all.filter(a=>a.s.toLowerCase().includes(n)):all.slice(0,8)).slice(0,12); sel=0;
+    $('#gr').innerHTML=res.map((a,i)=>`<a href="${a.h}" class="${i===sel?'on':''}">${esc(a.t)}<small>${esc(a.k)}</small></a>`).join('')||'<div class="empty">Không tìm thấy.</div>'; };
+  const close=()=>m.remove();
+  m.onclick=e=>{ if(e.target===m) close(); };
+  $('#gr').onclick=e=>{ if(e.target.closest('a')) close(); };
+  $('#gq').oninput=e=>draw(e.target.value);
+  $('#gq').onkeydown=e=>{ if(e.key==='Escape') close(); if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault(); sel=(sel+(e.key==='ArrowDown'?1:-1)+res.length)%res.length; $('#gr').querySelectorAll('a').forEach((a,i)=>a.classList.toggle('on',i===sel));}
+    if(e.key==='Enter'&&res[sel]){ location.hash=res[sel].h; close(); } };
+  draw(''); $('#gq').focus();
+}
+document.addEventListener('keydown',e=>{ if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){ e.preventDefault(); if(!document.querySelector('.modal')) openSearch(); } });
+const seg = (name, opts, cur) => `<div class="seg" data-seg="${name}">${opts.map(o=>`<button type="button" data-v="${o[0]}" aria-pressed="${o[0]===cur}">${o[1]}</button>`).join('')}</div>`;
+function wireSeg(root, onChange){ root.querySelectorAll('[data-seg]').forEach(s=>s.querySelectorAll('button').forEach(b=>b.onclick=()=>{ s.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b)); onChange(s.dataset.seg,b.dataset.v); })); }
+const progLine = (id,n,need) => `<p class="muted" style="font-size:13px;margin:10px 0 0">Đã thử ${Math.min(n,need)}/${need} phương án${S.labs[id]?' · lab đã hoàn thành ✓':''}</p>`;
+
+const LABS = [
+/* 1 ---------------- request journey */
+{id:"lab-request", title:"Đường đi của request", r:"request", icon:"route", lv:1, min:6, les:["request-lifecycle","binding-validation","authn-authz"],
+ desc:"Gửi một request qua từng tầng của Spring Boot và xem nó dừng ở đâu với mã lỗi gì trong từng tình huống.",
+ goal:"Chạy ít nhất 5 tình huống khác nhau.",
+ run(el){
+  const L=[["Client","FE gửi HTTP request"],["API Gateway","định tuyến, kiểm tra JWT"],["Tomcat","nhận kết nối, giao thread"],["Security filter","xác thực, phân quyền"],["DispatcherServlet","HandlerMapping tìm controller"],["Argument resolver","@PathVariable, @RequestBody, @Valid"],["Controller","@RestController"],["Service","proxy @Transactional"],["Repository + Hikari","lấy connection, chạy SQL"],["PostgreSQL","thực thi"],["Message converter","object → JSON"]];
+  const SC={
+   ok:{n:"Bình thường: GET /students/7",stop:null,code:"200 OK",msg:"Đi qua đủ mọi tầng. Response được Jackson chuyển thành JSON.",good:true},
+   notoken:{n:"Thiếu token",stop:3,code:"401 Unauthorized",msg:"Security filter không tìm thấy token hợp lệ. Controller không hề được gọi. (Ở hệ thống có gateway, request có thể bị chặn sớm hơn ngay tại gateway.)"},
+   norole:{n:"Có token, không có quyền",stop:3,code:"403 Forbidden",msg:"Xác thực thành công nhưng bước phân quyền từ chối. Biết bạn là ai, nhưng không cho làm."},
+   nourl:{n:"Sai đường dẫn /studens/7",stop:4,code:"404 Not Found",msg:"HandlerMapping không tìm được hàm nào khớp URL. Sai method sẽ ra 405."},
+   badtype:{n:"Path variable sai kiểu: /students/abc",stop:5,code:"400 Bad Request",msg:"Không chuyển được \"abc\" sang Long → MethodArgumentTypeMismatchException."},
+   badjson:{n:"Body JSON hỏng",stop:5,code:"400 Bad Request",msg:"Jackson không đọc được body → HttpMessageNotReadableException. Thiếu field bắt buộc với @Valid → MethodArgumentNotValidException."},
+   signed:{n:"Ký hồ sơ đã được ký",stop:7,code:"409 Conflict",msg:"Service phát hiện trạng thái đã ký và ném exception nghiệp vụ. Proxy rollback transaction, @ControllerAdvice chuyển thành 409."},
+   pool:{n:"Connection pool cạn",stop:8,code:"500 sau ~30 giây",msg:"Mọi connection đang bận; thread chờ tới connection-timeout (mặc định 30 giây) rồi ném SQLTransientConnectionException. Thường do transaction dài hoặc quá nhiều request đồng thời."},
+   view:{n:"Dùng @Controller thay vì @RestController",stop:10,code:"400 / 404",msg:"Chuỗi trả về bị hiểu là tên view. Spring forward sang đường dẫn khác, có thể lại khớp một mapping và lỗi tiếp, như lần benchmark trước."}
+  };
+  let sc='ok', timer=null;
+  el.innerHTML=`<div class="lab-wrap"><div class="card pad ctl"><label for="rs">Tình huống<select id="rs">${Object.entries(SC).map(([k,s])=>`<option value="${k}">${s.n}</option>`).join('')}</select></label><button class="btn pri" type="button" id="rgo">${ic('play')}Gửi request</button><div id="rres"></div><div id="rprog"></div></div>
+   <div class="layers" id="rl">${L.map((x,i)=>`<div class="layer" data-i="${i}"><span class="n">${String(i+1).padStart(2,'0')}</span><span><b>${x[0]}</b><small>${x[1]}</small></span><span class="st-ic"></span></div>`).join('')}</div></div>`;
+  const rows=[...el.querySelectorAll('.layer')];
+  $('#rs').onchange=e=>sc=e.target.value;
+  $('#rprog').innerHTML=progLine('lab-request',(S.labTries['lab-request']||[]).length,5);
+  $('#rgo').onclick=()=>{ clearInterval(timer); rows.forEach(r=>r.className='layer'); $('#rres').innerHTML='';
+    const s=SC[sc]; let i=0; const last = s.stop===null? L.length-1 : s.stop;
+    const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const step=()=>{ rows.forEach(r=>r.classList.remove('cur'));
+      if(i<last){ rows[i].classList.add('pass'); i++; rows[i].classList.add('cur'); return; }
+      clearInterval(timer); rows[last].classList.remove('cur'); rows[last].classList.add(s.stop===null?'pass':'stop');
+      rows.slice(last+1).forEach(r=>r.classList.add('skip'));
+      $('#rres').innerHTML=`<div class="res ${s.good?'ok':'no'}"><b class="code">${s.code}</b>${s.msg}</div>`;
+      const n=labTry('lab-request',sc,5); $('#rprog').innerHTML=progLine('lab-request',n,5); };
+    rows[0].classList.add('cur');
+    if(reduce){ while(!$('#rres').innerHTML) step(); } else timer=setInterval(step,380);
+  };
+  cleanup=()=>clearInterval(timer);
+ }},
+
+/* 2 ---------------- REST game */
+{id:"lab-rest", title:"Chọn method và mã trả về", r:"http", icon:"globe", lv:1, min:5, les:["rest-design","http-basics","api-practices"],
+ desc:"Tám tình huống của hệ thống trường học. Chọn HTTP method và status code đúng chuẩn REST.",
+ goal:"Làm hết 8 tình huống, đúng từ 6 câu.",
+ run(el){
+  const Q=[
+   ["Lấy danh sách học sinh của lớp 7","GET","200","GET /classes/7/students → 200."],
+   ["Tạo hồ sơ học sinh mới","POST","201","POST /students → 201 Created, kèm header Location."],
+   ["Sửa riêng số điện thoại phụ huynh","PATCH","200","PATCH vì chỉ đổi một phần; trả 200 kèm dữ liệu mới hoặc 204."],
+   ["Xóa một thông báo nháp","DELETE","204","DELETE /notifications/15 → 204 No Content."],
+   ["Ký một hồ sơ đã được ký trước đó","POST","409","Thao tác ký là POST /documents/9/sign; trạng thái xung đột → 409."],
+   ["Gọi API khi access token đã hết hạn","GET","401","Chưa xác thực được → 401, client dùng refresh token để lấy token mới."],
+   ["Giáo viên trường A xem danh sách lương trường B","GET","403","Đã xác thực nhưng không có quyền trên tenant khác → 403 (một số hệ thống trả 404 để không lộ sự tồn tại)."],
+   ["Tìm học sinh với bộ lọc EAV lồng 30 điều kiện","POST","200","Chuẩn là GET, nhưng bộ lọc JSON phức tạp là ngoại lệ hay được chấp nhận: POST /students/search → 200. Khi trả lời, nêu cả quy ước lẫn lý do."]
+  ];
+  const ans=Q.map(()=>({m:null,s:null}));
+  el.innerHTML=`<div class="card">${Q.map((q,i)=>`<div class="q" data-i="${i}"><p>${i+1}. ${q[0]}</p><div class="fl" style="font-size:12px;color:var(--muted);font-weight:600">Method</div>${seg('m'+i,['GET','POST','PUT','PATCH','DELETE'].map(x=>[x,x]),null)}<div class="fl" style="font-size:12px;color:var(--muted);font-weight:600;margin-top:8px">Status</div>${seg('s'+i,['200','201','204','400','401','403','404','409','500'].map(x=>[x,x]),null)}<div class="fb"></div></div>`).join('')}</div>
+   <div style="display:flex;gap:10px;align-items:center;margin-top:14px"><button class="btn pri" type="button" id="rchk">Chấm điểm</button><span id="rsc" class="muted"></span></div>`;
+  wireSeg(el,(k,v)=>{ const i=+k.slice(1); ans[i][k[0]]=v; });
+  $('#rchk').onclick=()=>{ let ok=0;
+    el.querySelectorAll('.q').forEach((qe,i)=>{ const q=Q[i], a=ans[i], good=a.m===q[1]&&a.s===q[2]; if(good) ok++;
+      qe.querySelector('.fb').innerHTML=`<div class="why"><b style="color:${good?'var(--good)':'var(--bad)'}">${good?'Đúng.':'Đáp án: '+q[1]+' · '+q[2]+'.'}</b> ${q[3]}</div>`; });
+    const filled=ans.every(a=>a.m&&a.s);
+    $('#rsc').textContent=`Đúng ${ok}/8${filled?'':' · còn câu chưa chọn'}`;
+    if(filled && ok>=6) labDone('lab-rest');
+  };
+ }},
+
+/* 3 ---------------- JWT role change */
+{id:"lab-jwt", title:"Đổi quyền khi đang dùng JWT", r:"security", icon:"shield", lv:2, min:6, les:["access-refresh","jwt","rbac"],
+ desc:"Quản trị gỡ vai trò của một giáo viên. Token vẫn còn hạn. Bao lâu thì quyền cũ hết tác dụng, và phải trả giá gì?",
+ goal:"Thử cả 4 chiến lược.",
+ run(el){
+  let ttl=15, at=5, stg='wait';
+  const STG={
+   wait:["Chờ token hết hạn","Không thêm gì. Quyền cũ còn tới khi access token hết hạn rồi làm mới.","Không tốn thêm truy vấn. Cửa sổ rủi ro bằng phần còn lại của hạn token."],
+   ver:["Thời điểm đổi quyền trong Redis","Lưu roleChangedAt của user; gateway từ chối token có iat cũ hơn, client phải làm mới.","Hiệu lực gần như ngay. Mỗi request tra Redis một lần."],
+   deny:["Danh sách đen jti","Đưa jti của mọi token đang sống của user vào Redis tới khi chúng hết hạn.","Hiệu lực ngay. Phải biết mọi jti đang cấp; mỗi request tra Redis."],
+   cache:["Quyền chi tiết tra từ cache","Token chỉ mang user + tenant (+ vai trò thô). Quyền theo menu đọc từ Redis, đồng bộ khi đổi vai trò.","Quyền chi tiết đổi ngay khi cache được cập nhật. Vai trò thô trong token vẫn cũ tới khi hết hạn."]
+  };
+  el.innerHTML=`<div class="lab-wrap"><div class="card pad ctl">
+    <label>Hạn access token${seg('ttl',[['5','5 phút'],['15','15 phút'],['60','60 phút']],'15')}</label>
+    <label for="jat">Gỡ quyền ở phút thứ <span id="jatv">5</span><input type="range" id="jat" min="0" max="15" value="5"></label>
+    <label>Chiến lược${seg('stg',Object.entries(STG).map(([k,v])=>[k,v[0]]),'wait')}</label><div id="jprog"></div></div>
+    <div class="card pad"><div class="h-sec" style="margin-top:0">Dòng thời gian của một access token</div><div class="tl" id="jtl"></div><div class="tl-ax"><span>0′ cấp token</span><span id="jend">15′ hết hạn</span></div><div id="jres" style="margin-top:14px"></div></div></div>`;
+  const draw=()=>{ at=Math.min(at,ttl); $('#jat').max=ttl; $('#jat').value=at; $('#jatv').textContent=at; $('#jend').textContent=ttl+'′ hết hạn';
+    const s=STG[stg]; const stale = stg==='wait'? ttl-at : stg==='cache'? 0 : 0;
+    const p=x=>100*x/ttl;
+    $('#jtl').innerHTML=`<div class="seg-ok" style="left:0;width:${p(at)}%"></div>${stale>0?`<div class="seg-bad" style="left:${p(at)}%;width:${p(stale)}%"></div>`:''}<div class="mk" style="left:${p(at)}%"><span>gỡ quyền</span></div>`;
+    $('#jres').innerHTML=`<div class="res ${stale>0?'no':'ok'}"><b class="code">${stale>0?`Quyền cũ còn ${stale} phút`:'Quyền cũ hết tác dụng gần như ngay'}</b>${s[1]}<br><span class="muted">${s[2]}</span></div>`;
+    $('#jprog').innerHTML=progLine('lab-jwt',labTry('lab-jwt',stg,4),4);
+  };
+  wireSeg(el,(k,v)=>{ if(k==='ttl') ttl=+v; else stg=v; draw(); });
+  $('#jat').oninput=e=>{at=+e.target.value;draw();};
+  draw();
+ }},
+
+/* 4 ---------------- transaction propagation */
+{id:"lab-tx", title:"Ống chung, ống riêng: transaction lồng nhau", r:"data", icon:"db", lv:3, min:8, les:["propagation","transactions"],
+ desc:"a() @Transactional lưu x rồi gọi b() lưu y. Đổi cách gọi, propagation, chỗ ném lỗi và việc bắt lỗi, xem x và y còn hay mất.",
+ goal:"Thử ít nhất 6 tổ hợp khác nhau.",
+ run(el){
+  let call='bean', prop='REQUIRED', err='none', caught=true;
+  el.innerHTML=`<div class="lab-wrap"><div class="card pad ctl">
+   <label>Cách a() gọi b()${seg('call',[['bean','serviceB.b() (bean khác)'],['self','this.b() (cùng class)']],'bean')}</label>
+   <label>Propagation của b()${seg('prop',[['REQUIRED','REQUIRED'],['REQUIRES_NEW','REQUIRES_NEW'],['NESTED','NESTED']],'REQUIRED')}</label>
+   <label>Lỗi xảy ra${seg('err',[['none','Không lỗi'],['B','b() ném lỗi sau khi lưu y'],['A','a() ném lỗi sau khi b() xong']],'none')}</label>
+   <label class="row"><input type="checkbox" id="tc" checked> a() bắt lỗi của b() bằng try/catch rồi chạy tiếp</label>
+   <pre class="log" style="max-height:none">@Transactional
+public void a() {
+    repo.save(x);
+    <span id="tcode1">try { </span>serviceB.b();<span id="tcode2"> } catch (RuntimeException e) { log.warn(..) }</span>
+    <span id="tcode3">// không lỗi</span>
+}</pre><div id="tprog"></div></div>
+   <div style="display:grid;gap:14px;min-width:0"><div class="tubes" id="ttubes"></div><div id="tres"></div></div></div>`;
+  const calc=()=>{
+   const self=call==='self';
+   if(self){
+     if(err==='none') return {x:1,y:1,ex:null,shared:true,note:"this.b() không qua proxy nên @Transactional của b() bị bỏ qua dù khai báo gì. b() chạy như code thường trong ống của a()."};
+     if(err==='B') return caught? {x:1,y:1,ex:null,shared:true,note:"Không có proxy nào thấy lỗi của b(), nên không có dấu rollback-only. a() bắt lỗi, chạy tiếp và commit: y vẫn được lưu dù b() đã lỗi. Đây là lý do gọi nội bộ rất dễ gây dữ liệu sai."}
+                           : {x:0,y:0,ex:"RuntimeException",shared:true,note:"Lỗi bay ra khỏi a(), proxy của a() rollback cả ống."};
+     return {x:0,y:0,ex:"RuntimeException",shared:true,note:"a() lỗi nên cả ống bị rollback, y nằm chung ống nên mất theo."};
+   }
+   if(prop==='REQUIRED'){
+     if(err==='none') return {x:1,y:1,ex:null,shared:true,note:"b() dùng chung ống của a(). Chỉ commit một lần khi a() kết thúc."};
+     if(err==='B') return caught? {x:0,y:0,ex:"UnexpectedRollbackException",shared:true,note:"Proxy của b() thấy lỗi nhưng ống không phải của nó, nên dán nhãn rollback-only. a() bắt lỗi, chạy tiếp, tới lúc commit thì Spring thấy nhãn: rollback hết và ném UnexpectedRollbackException cho controller."}
+                           : {x:0,y:0,ex:"RuntimeException",shared:true,note:"Lỗi bay ra khỏi a(), rollback cả ống."};
+     return {x:0,y:0,ex:"RuntimeException",shared:true,note:"Ống chung: a() lỗi thì mất cả y dù b() đã chạy xong."};
+   }
+   if(prop==='REQUIRES_NEW'){
+     if(err==='none') return {x:1,y:1,ex:null,shared:false,note:"b() có ống riêng (connection riêng), commit ngay khi b() xong; a() commit khi kết thúc."};
+     if(err==='B') return caught? {x:1,y:0,ex:null,shared:false,note:"Ống riêng của b() nổ một mình và rollback. Ống của a() không bị dán nhãn, a() bắt lỗi rồi commit bình thường."}
+                           : {x:0,y:0,ex:"RuntimeException",shared:false,note:"b() rollback ống riêng; lỗi tiếp tục bay ra khỏi a() nên a() cũng rollback."};
+     return {x:0,y:1,ex:"RuntimeException",shared:false,note:"y đã được commit trong ống riêng trước khi a() lỗi, nên y còn, x mất. Đây là cách ghi log lỗi \"phải lưu dù việc chính hỏng\"."};
+   }
+   // NESTED
+   if(err==='none') return {x:1,y:1,ex:null,shared:true,sp:true,note:"Dùng chung ống, có savepoint trước b(). Không lỗi thì commit cả hai ở cuối a()."};
+   if(err==='B') return caught? {x:1,y:0,ex:null,shared:true,sp:true,note:"b() lỗi thì lùi về savepoint, chỉ mất y. a() bắt lỗi và commit x. Lưu ý: với JPA, entity trong bộ nhớ không lùi theo savepoint."}
+                         : {x:0,y:0,ex:"RuntimeException",shared:true,sp:true,note:"Lỗi bay ra khỏi a(): rollback cả ống."};
+   return {x:0,y:0,ex:"RuntimeException",shared:true,sp:true,note:"NESTED vẫn là chung ống: a() lỗi thì mất cả y."};
+  };
+  const draw=()=>{
+   const r=calc(); const bd=(n,k)=>`<span class="bead ${k?'ok':'no'}">${n} ${k?'lưu':'mất'}</span>`;
+   $('#tcode1').style.display=$('#tcode2').style.display = (caught&&err==='B')?'':'none';
+   $('#tcode3').textContent = err==='A'?'throw new RuntimeException(); // a() lỗi':err==='B'?'// b() ném RuntimeException bên trong':'// không lỗi';
+   el.querySelector('#tc').closest('label').style.opacity = err==='B'?1:.45;
+   $('#ttubes').innerHTML = r.shared
+     ? `<div class="tube ${r.x||r.y?'ok':'no'}"><h5>Ống của a()${r.sp?' · có savepoint':''}</h5>${bd('x',r.x)}${bd('y',r.y)}</div><div class="tube none"><h5>Không có ống riêng</h5><span class="muted" style="font-size:13px">${call==='self'?'this.b() không qua proxy':'b() tham gia ống của a()'}</span></div>`
+     : `<div class="tube ${r.x?'ok':'no'}"><h5>Ống của a()</h5>${bd('x',r.x)}</div><div class="tube ${r.y?'ok':'no'}"><h5>Ống riêng của b()</h5>${bd('y',r.y)}</div>`;
+   $('#tres').innerHTML=`<div class="res ${r.ex?'no':'ok'}"><b class="code">${r.ex?'Controller nhận: '+r.ex:'Không có exception tới controller'}</b>${r.note}</div>`;
+   $('#tprog').innerHTML=progLine('lab-tx',labTry('lab-tx',[call,call==='self'?'-':prop,err,err==='B'?caught:'-'].join('|'),6),6);
+  };
+  wireSeg(el,(k,v)=>{ if(k==='call') call=v; if(k==='prop') prop=v; if(k==='err') err=v; draw(); });
+  $('#tc').onchange=e=>{caught=e.target.checked;draw();};
+  draw();
+ }},
+
+/* 5 ---------------- index */
+{id:"lab-index", title:"Index nhiều cột có được dùng không", r:"data", icon:"db", lv:2, min:6, les:["indexing","n-plus-one"],
+ desc:"Sắp thứ tự cột của index và chọn điều kiện truy vấn. Xem planner có dùng được index, dùng tới cột nào.",
+ goal:"Thử 4 tổ hợp khác nhau.",
+ run(el){
+  const C=['tenant_id','status','created_at']; let idx=['tenant_id','status','created_at'];
+  el.innerHTML=`<div class="lab-wrap"><div class="card pad ctl">
+    <div class="fl">Index theo thứ tự cột</div>${[0,1,2].map(i=>`<select id="ix${i}" aria-label="Cột ${i+1}">${['(trống)',...C].map(c=>`<option ${idx[i]===c?'selected':''}>${c}</option>`).join('')}</select>`).join('')}
+    <div class="fl" style="margin-top:6px">Điều kiện WHERE</div>
+    <label class="row"><input type="checkbox" id="qt" checked> tenant_id = ?</label>
+    <label class="row"><input type="checkbox" id="qs"> status = ?</label>
+    <label class="row"><input type="checkbox" id="qc"> created_at trong một khoảng</label>
+    <label class="row"><input type="checkbox" id="qf"> viết thành date(created_at) = ?</label>
+    <label class="row"><input type="checkbox" id="qo"> ORDER BY created_at</label><div id="iprog"></div></div>
+   <div style="display:grid;gap:14px;min-width:0"><pre class="log" id="isql" style="max-height:none"></pre><div id="ires"></div></div></div>`;
+  const draw=()=>{
+   idx=[0,1,2].map(i=>$('#ix'+i).value).filter(c=>c!=='(trống)'); idx=[...new Set(idx)];
+   const q={tenant_id:$('#qt').checked?'eq':null,status:$('#qs').checked?'eq':null,created_at:$('#qc').checked?($('#qf').checked?'fn':'range'):null};
+   const order=$('#qo').checked;
+   const where=[q.tenant_id&&'tenant_id = ?',q.status&&'status = ?',q.created_at==='range'&&"created_at >= ? AND created_at < ?",q.created_at==='fn'&&'date(created_at) = ?'].filter(Boolean);
+   $('#isql').textContent=`CREATE INDEX ON notification (${idx.join(', ')||'…'});\n\nSELECT * FROM notification\n${where.length?'WHERE '+where.join('\n  AND '):'-- không có điều kiện'}${order?'\nORDER BY created_at':''};`;
+   const used=[]; let stopRange=false;
+   for(const c of idx){ if(stopRange) break; const k=q[c]; if(k==='eq'){used.push(c);} else if(k==='range'){used.push(c);stopRange=true;} else break; }
+   const nextAfterEq = idx[used.length]; const orderOk = order && ((nextAfterEq==='created_at' && !stopRange) || (used[used.length-1]==='created_at' && stopRange && used.length===idx.indexOf('created_at')+1));
+   let cls='ok', head, msg;
+   if(!idx.length){cls='info';head='Chưa có index';msg='Chọn ít nhất một cột.';}
+   else if(!used.length){cls='no';head='Seq Scan (không dùng được index)';
+     msg = q[idx[0]]==='fn'?'Cột đầu bị bọc trong hàm date(), index trên giá trị gốc không dùng được. Viết thành khoảng created_at >= … AND created_at < ….'
+          : `Truy vấn không lọc theo cột đầu tiên (${idx[0]}) của index. Theo quy tắc cột bên trái, index sắp theo ${idx[0]} trước nên không nhảy thẳng tới được.`;}
+   else { head=`Index Scan dùng ${used.length}/${idx.length} cột: ${used.join(', ')}`;
+     const unused=Object.entries(q).filter(([c,k])=>k&&!used.includes(c)).map(([c])=>c);
+     msg=`Planner đi theo index qua ${used.join(' → ')}.${unused.length?` Điều kiện trên ${unused.join(', ')} được lọc thêm sau khi đọc dòng (không nhờ index).`:''}${stopRange&&idx.indexOf(used[used.length-1])<idx.length-1?' Cột lọc theo khoảng chặn việc dùng các cột phía sau nó, vì vậy cột khoảng nên đặt cuối.':''}${order?(orderOk?' ORDER BY created_at được phục vụ luôn bởi thứ tự của index, không cần sắp xếp thêm.':' ORDER BY created_at cần thêm bước Sort vì thứ tự index không khớp.'):''}`;
+     if(q.created_at==='fn') msg+=' date(created_at) không dùng được index trên created_at.';
+   }
+   $('#ires').innerHTML=`<div class="res ${cls}"><b class="code" style="font-size:15px">${head}</b>${msg}<br><span class="muted" style="font-size:13px">Đây là mô phỏng quy tắc. Planner thật còn xét thống kê: lấy phần lớn số dòng hoặc bảng nhỏ thì có thể chọn Seq Scan dù index dùng được.</span></div>`;
+   $('#iprog').innerHTML=progLine('lab-index',labTry('lab-index',idx.join(',')+'|'+JSON.stringify(q)+order,4),4);
+  };
+  el.querySelectorAll('select,input').forEach(x=>x.onchange=draw); draw();
+ }},
+
+/* 6 ---------------- RabbitMQ consumer failure */
+{id:"lab-mq", title:"Consumer gặp lỗi", r:"async", icon:"queue", lv:3, min:8, les:["consumer-failures","delivery-idempotency","messaging-basics"],
+ desc:"Một message kết quả H5P tới consumer và xử lý bị lỗi. Bật tắt retry, DLQ, idempotency để xem message đi đâu và tiến độ có bị sai.",
+ goal:"Chạy 4 cấu hình cho ra 4 kết cục khác nhau.",
+ run(el){
+  let kind='temp', retry=true, max=3, dlq=true, crash=false, idem=false;
+  el.innerHTML=`<div class="lab-wrap"><div class="card pad ctl">
+   <label>Loại lỗi${seg('kind',[['temp','Tạm thời (DB chậm, lần 3 thì được)'],['perm','Vĩnh viễn (dữ liệu sai)']],'temp')}</label>
+   <label class="row"><input type="checkbox" id="mr" checked> Bật retry có giới hạn</label>
+   <label for="mm">Số lần thử tối đa: <span id="mmv">3</span><input type="range" id="mm" min="1" max="5" value="3"></label>
+   <label class="row"><input type="checkbox" id="md" checked> Queue có dead letter exchange (DLQ)</label>
+   <label class="row"><input type="checkbox" id="mc"> Pod chết sau khi ghi DB, trước khi ack</label>
+   <label class="row"><input type="checkbox" id="mi"> Consumer idempotent (tính lại từ dữ liệu gốc)</label>
+   <button class="btn pri" type="button" id="mgo">${ic('play')}Gửi message</button><div id="mprog"></div></div>
+   <div style="display:grid;gap:14px;min-width:0"><div class="log" id="mlog">Bấm "Gửi message" để chạy.</div><div id="mres"></div></div></div>`;
+  wireSeg(el,(k,v)=>{kind=v;});
+  const g=id=>el.querySelector(id);
+  g('#mr').onchange=e=>retry=e.target.checked; g('#mm').oninput=e=>{max=+e.target.value;g('#mmv').textContent=max;};
+  g('#md').onchange=e=>dlq=e.target.checked; g('#mc').onchange=e=>crash=e.target.checked; g('#mi').onchange=e=>idem=e.target.checked;
+  g('#mgo').onclick=()=>{
+   const L=[]; let out, cls; const okAt = kind==='temp'?3:Infinity; let progress=0;
+   L.push('<span>→ publish h5p.result {studentId:42, lesson:7, score:10}</span>');
+   if(crash){
+     L.push('<span>[pod-a] nhận message, xử lý: tiến độ bài 7 +10%</span>'); progress+=10;
+     L.push('<span class="e">[pod-a] ✗ pod bị kill trước khi ack</span>');
+     L.push('<span class="w">RabbitMQ: message chưa ack → giao lại cho pod-b</span>');
+     L.push(`<span>[pod-b] xử lý lại: ${idem?'tính lại tiến độ từ bảng kết quả → vẫn 10%':'tiến độ +10% lần nữa'}</span>`); if(!idem) progress+=10;
+     L.push('<span class="s">[pod-b] ✓ ack</span>');
+     out = idem? 'Message được xử lý hai lần nhưng tiến độ vẫn đúng 10% nhờ consumer idempotent.' : `Tiến độ thành ${progress}% thay vì 10%. Giao ít nhất một lần + cộng dồn = dữ liệu sai.`; cls = idem?'ok':'no';
+   } else if(!retry){
+     let n=0; while(n<8){ n++; if(n>=okAt){ L.push(`<span class="s">lần giao ${n}: ✓ xử lý thành công, ack</span>`); break; } L.push(`<span class="e">lần giao ${n}: ✗ exception → requeue mặc định → giao lại ngay</span>`); }
+     if(n>=okAt && kind==='temp'){ out='Thành công sau 3 lần, nhưng các lần giao lại diễn ra liên tục không giãn cách, dồn thêm tải vào DB đang chậm.'; cls='info'; }
+     else { L.push('<span class="w">… lặp vô hạn: poison message chiếm consumer, log ngập, CPU tăng</span>'); out='Không giới hạn số lần: message hỏng bị requeue mãi. Cần retry có giới hạn và DLQ.'; cls='no'; }
+   } else {
+     let n=0, ok=false; while(n<max){ n++; if(n>=okAt){ L.push(`<span class="s">lần thử ${n}: ✓ thành công, ack</span>`); ok=true; break; } L.push(`<span class="e">lần thử ${n}: ✗ exception</span>${n<max?` <span class="w">chờ ${2**(n-1)}s rồi thử lại</span>`:''}`); }
+     if(ok){ out=`Lỗi tạm thời được retry có giãn cách xử lý sau ${n} lần, không ảnh hưởng message khác.`; cls='ok'; }
+     else if(dlq){ L.push('<span class="w">hết số lần thử → reject, không requeue → dead letter exchange → DLQ</span>'); L.push('<span>⚑ cảnh báo: DLQ có 1 message</span>'); out='Message hỏng nằm trong DLQ, queue chính chạy tiếp. Sửa lỗi xong có thể đẩy lại từ DLQ.'+(kind==='perm'?' Với lỗi dữ liệu, nên ném AmqpRejectAndDontRequeueException để vào DLQ ngay, khỏi phí lượt thử.':''); cls='ok'; }
+     else { L.push('<span class="e">hết số lần thử → reject, không requeue → không có dead letter → message bị bỏ</span>'); out='Message bị mất mà không ai biết. Bật retry thì phải cấu hình DLQ.'; cls='no'; }
+   }
+   g('#mlog').innerHTML=L.join('\n');
+   g('#mres').innerHTML=`<div class="res ${cls}">${out}</div>`;
+   const key = crash?(idem?'crash-idem':'crash-dup'):(!retry?(kind==='temp'?'noretry-temp':'loop'):(cls==='ok'&&g('#mlog').textContent.includes('DLQ')?'dlq':cls==='ok'?'retry-ok':'lost'));
+   g('#mprog').innerHTML=progLine('lab-mq',labTry('lab-mq',key,4),4);
+  };
+ }},
+
+/* 7 ---------------- throughput */
+{id:"lab-throughput", title:"Máy tính nút thắt", r:"perf", icon:"gauge", lv:2, min:7, les:["littles-law","threads-vt","pools"],
+ desc:"Nhập số kết nối, số thread, thời gian chờ, thời gian CPU và pool DB. Xem thông lượng tối đa và tài nguyên nào là nút thắt.",
+ goal:"Thử cả 4 kịch bản mẫu.",
+ run(el){
+  const P={
+   a:{n:"API ngủ 1s · 200 thread",c:2000,v:false,t:200,io:1000,cpu:1,cores:10,pool:10,db:0},
+   b:{n:"Cùng API · bật virtual thread",c:2000,v:true,t:200,io:1000,cpu:1,cores:10,pool:10,db:0},
+   c:{n:"Bước xác thực tốn ~100ms CPU",c:2000,v:true,t:200,io:0,cpu:100,cores:10,pool:10,db:0},
+   d:{n:"Virtual thread + DB giữ connection 0,5s",c:2000,v:true,t:200,io:500,cpu:2,cores:10,pool:10,db:500}
+  };
+  let s={...P.a}, pk='a';
+  const F=[['c','Kết nối đồng thời (wrk -c)',1,5000],['t','Số thread Tomcat',1,1000],['io','Thời gian chờ I/O mỗi request (ms)',0,5000],['cpu','Thời gian CPU mỗi request (ms)',0,1000],['cores','Số nhân CPU',1,64],['pool','Connection pool (Hikari)',1,200],['db','Thời gian giữ connection (ms)',0,5000]];
+  el.innerHTML=`<div class="lab-wrap"><div class="card pad ctl">
+   <label>Kịch bản mẫu${seg('pre',Object.entries(P).map(([k,v])=>[k,v.n]),'a')}</label>
+   <label class="row"><input type="checkbox" id="tv"> Bật virtual thread</label>
+   ${F.map(f=>`<label for="f${f[0]}">${f[1]}<input type="number" id="f${f[0]}" min="${f[2]}" max="${f[3]}"></label>`).join('')}<div id="thprog"></div></div>
+   <div style="display:grid;gap:14px;min-width:0"><div class="card pad"><div class="h-sec" style="margin-top:0">Trần thông lượng của từng tài nguyên (request/giây)</div><div class="caps" id="tcaps"></div></div><div id="tres2"></div></div></div>`;
+  const fill=()=>{ F.forEach(f=>el.querySelector('#f'+f[0]).value=s[f[0]]); el.querySelector('#tv').checked=s.v; el.querySelector('#ft').disabled=s.v; };
+  const draw=()=>{
+   const R=Math.max(1,s.io+s.cpu)/1000;
+   const caps=[['Kết nối của client',s.c/R],['Thread phục vụ',s.v?Infinity:s.t/R],['CPU',s.cpu>0?s.cores/(s.cpu/1000):Infinity],['Connection DB',s.db>0?s.pool/(s.db/1000):Infinity]];
+   const fin=caps.filter(c=>isFinite(c[1])); const min=Math.min(...fin.map(c=>c[1])); const max=Math.max(...fin.map(c=>c[1]));
+   el.querySelector('#tcaps').innerHTML=caps.map(c=>`<div class="cap ${c[1]===min?'min':''}"><span>${c[0]}</span><span class="track"><i style="width:${isFinite(c[1])?Math.max(2,100*c[1]/max):0}%"></i></span><span class="val">${isFinite(c[1])?Math.round(c[1]).toLocaleString('vi-VN'):'không giới hạn'}</span></div>`).join('');
+   const b=caps.find(c=>c[1]===min)[0]; const lat=Math.max(R, s.c/min);
+   const tip={ 'Kết nối của client':'Server còn dư sức; muốn đo trần thật thì tăng -c.', 'Thread phục vụ':'Mỗi request giữ một thread suốt lúc chờ. Bật virtual thread hoặc giảm thời gian chờ.', 'CPU':'Việc tốn CPU: virtual thread không giúp. Giảm chi phí CPU mỗi request (ví dụ bước băm mật khẩu) hoặc thêm máy.', 'Connection DB':'Giảm thời gian giữ connection (transaction ngắn, không gọi dịch vụ ngoài trong transaction) trước khi nghĩ tới tăng pool.' }[b];
+   el.querySelector('#tres2').innerHTML=`<div class="res info"><b class="code">≈ ${Math.round(min).toLocaleString('vi-VN')} request/giây</b>Nút thắt: <b>${b}</b>. Độ trễ trung bình khi bão hòa ≈ ${lat>=10?Math.round(lat):lat.toFixed(2)} giây (định luật Little: ${s.c} kết nối ÷ ${Math.round(min)} req/s). ${tip}</div>`;
+  };
+  wireSeg(el,(k,v)=>{ pk=v; s={...P[v]}; fill(); draw(); el.querySelector('#thprog').innerHTML=progLine('lab-throughput',labTry('lab-throughput',v,4),4); });
+  el.querySelector('#tv').onchange=e=>{s.v=e.target.checked; el.querySelector('#ft').disabled=s.v; draw();};
+  F.forEach(f=>el.querySelector('#f'+f[0]).oninput=e=>{ const n=+e.target.value; if(n>=f[2]) { s[f[0]]=Math.min(n,f[3]); draw(); } });
+  fill(); draw(); el.querySelector('#thprog').innerHTML=progLine('lab-throughput',labTry('lab-throughput','a',4),4);
+ }},
+
+/* 8 ---------------- cache invalidation race */
+{id:"lab-cache", title:"Xóa cache trước hay sau commit", r:"perf", icon:"gauge", lv:2, min:5, les:["caching","rbac","outbox"],
+ desc:"Quản trị đổi vai trò của một giáo viên trong khi giáo viên đó đang tải menu. Đi từng bước để thấy vì sao thứ tự xóa cache quan trọng.",
+ goal:"Xem hết cả hai cách.",
+ run(el){
+  const M={
+   before:{n:"Xóa cache trước khi commit",steps:[
+    ["A","BEGIN, cập nhật vai trò trong DB (chưa commit)",""],
+    ["A","Xóa cache menu của giáo viên",""],
+    ["B","Giáo viên tải menu: cache miss",""],
+    ["B","Đọc DB: thấy vai trò CŨ vì A chưa commit",""],
+    ["B","Ghi menu CŨ vào cache","bad"],
+    ["A","COMMIT: DB đã có vai trò mới",""],
+    ["!","Cache giữ menu cũ tới khi hết TTL. DB và cache lệch.","bad"]]},
+   after:{n:"Xóa cache sau khi commit",steps:[
+    ["A","BEGIN, cập nhật vai trò trong DB (chưa commit)",""],
+    ["B","Giáo viên tải menu: cache hit, menu cũ (chấp nhận được, chưa commit)",""],
+    ["A","COMMIT",""],
+    ["A","@TransactionalEventListener(AFTER_COMMIT): xóa cache",""],
+    ["B","Lần tải sau: cache miss, đọc DB thấy vai trò MỚI, ghi vào cache",""],
+    ["!","Cache khớp DB. Còn một khe nhỏ (nếu xóa cache thất bại) nên vẫn đặt TTL làm lưới an toàn.","ok"]]}
+  };
+  let m='before', i=0; const seen={before:false,after:false};
+  el.innerHTML=`<div class="lab-wrap"><div class="card pad ctl"><label>Cách làm${seg('m',[['before','Xóa trước commit'],['after','Xóa sau commit']],'before')}</label>
+   <div style="display:flex;gap:8px"><button class="btn" type="button" id="cprev">← Lùi</button><button class="btn pri" type="button" id="cnext">Bước tiếp →</button></div><div id="cprog"></div></div>
+   <div class="card pad"><div class="lanes" id="clanes"></div><div id="cres" style="margin-top:14px"></div></div></div>`;
+  const draw=()=>{ const st=M[m].steps;
+   const lane=(who,label)=>`<div class="lane"><b>${label}</b><div class="steps">${st.map((s,k)=>s[0]===who&&k<=i?`<span class="st ${k===i?'hl':''} ${s[2]==='bad'?'badst':''}">${k+1}. ${s[1]}</span>`:'').join('')||'<span class="muted" style="font-size:12.5px;padding-top:6px">…</span>'}</div></div>`;
+   el.querySelector('#clanes').innerHTML=lane('A','Request A · quản trị')+lane('B','Request B · giáo viên');
+   const last=st[i]; el.querySelector('#cres').innerHTML = last[0]==='!'?`<div class="res ${last[2]==='bad'?'no':'ok'}">${last[1]}</div>`:`<div class="res info">Bước ${i+1}/${st.length}</div>`;
+   el.querySelector('#cprev').disabled=i===0; el.querySelector('#cnext').disabled=i===st.length-1;
+   if(i===st.length-1 && !seen[m]){ seen[m]=true; }
+   el.querySelector('#cprog').innerHTML=progLine('lab-cache',(S.labTries['lab-cache']||[]).length,2);
+   if(i===st.length-1){ el.querySelector('#cprog').innerHTML=progLine('lab-cache',labTry('lab-cache',m,2),2); }
+  };
+  wireSeg(el,(k,v)=>{m=v;i=0;draw();});
+  el.querySelector('#cnext').onclick=()=>{i++;draw();}; el.querySelector('#cprev').onclick=()=>{i--;draw();};
+  draw();
+ }}
+];
+$("#sbtn").onclick=openSearch; route();
+</script>
