@@ -1,9 +1,15 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hành trình Backend</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
+[hidden]{display:none!important}
 /* Layout: left rail navigation + main workspace; map = topic regions laid as trails of lesson stations. */
 :root{
   --bg:#EDF1F3; --surface:#FFFFFF; --surface2:#F5F8F9; --fg:#14202B; --muted:#5A6A77; --line:#D6DFE4;
@@ -287,6 +293,8 @@ input.search{font:inherit;width:100%;padding:11px 14px;border-radius:10px;border
 .empty{padding:28px;text-align:center;color:var(--muted)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
+</head>
+<body>
 <div class="app">
   <nav class="rail" id="rail" aria-label="Điều hướng chính"></nav>
   <div class="main">
@@ -997,7 +1005,38 @@ const KEY='hanh-trinh-backend';
 const today = () => new Date().toISOString().slice(0,10);
 let S = {done:{},labs:{},xp:0,qa:{},exams:[],cards:{},day:{d:'',xp:0},streak:{last:'',n:0},labTries:{}};
 try{ const raw=localStorage.getItem(KEY); if(raw) S=Object.assign(S,JSON.parse(raw)); }catch(e){}
-function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+function save(){ S.updatedAt=new Date().toISOString(); try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+/* merge two progress snapshots: union of what was learned, max of counters */
+function mergeProgress(a,b){
+  const m={...a};
+  m.done={...(b.done||{}),...(a.done||{})};
+  m.labs={...(b.labs||{}),...(a.labs||{})};
+  m.qa={...(b.qa||{}),...(a.qa||{})};
+  m.cards={...(b.cards||{})}; Object.entries(a.cards||{}).forEach(([k,v])=>{ if(m.cards[k]!=='known') m.cards[k]=v; });
+  m.xp=Math.max(a.xp||0,b.xp||0);
+  const ex=[...(a.exams||[]),...(b.exams||[])], seen=new Set();
+  m.exams=ex.filter(e=>{const k=[e.d,e.n,e.ok,e.pct].join('|'); if(seen.has(k)) return false; seen.add(k); return true;});
+  const da=a.day||{}, db=b.day||{};
+  m.day = da.d===db.d ? {d:da.d,xp:Math.max(da.xp||0,db.xp||0)} : ((da.d||'')>(db.d||'')?da:db);
+  const sa=a.streak||{}, sb=b.streak||{};
+  m.streak = (sa.last||'')===(sb.last||'') ? {last:sa.last,n:Math.max(sa.n||0,sb.n||0)} : ((sa.last||'')>(sb.last||'')?sa:sb);
+  m.labTries={...(b.labTries||{})}; Object.entries(a.labTries||{}).forEach(([k,v])=>{ m.labTries[k]=[...new Set([...(m.labTries[k]||[]),...v])]; });
+  return m;
+}
+let repoSync='chưa kiểm tra';
+async function syncFromRepo(){
+  if(!/^https?:/.test(location.protocol)){ repoSync='không áp dụng khi mở file trực tiếp'; return; }
+  try{
+    const r=await fetch('progress.json',{cache:'no-store'});
+    if(!r.ok){ repoSync='repo chưa có progress.json'; return; }
+    const remote=await r.json();
+    const before=JSON.stringify(S);
+    S=Object.assign(S,mergeProgress(S,remote)); 
+    repoSync='đã gộp tiến độ từ progress.json'+(remote.updatedAt?' (lưu lúc '+new Date(remote.updatedAt).toLocaleString('vi-VN')+')':'');
+    if(JSON.stringify(S)!==before){ save(); route(); }
+  }catch(e){ repoSync='không đọc được progress.json'; }
+}
+try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
 function addXP(n,why){
   if(!n) return;
   S.xp+=n;
@@ -1023,7 +1062,7 @@ const examBest = () => S.exams.length ? Math.max(...S.exams.map(e=>e.pct)) : 0;
 const NAV=[
  ['h','Hành trình'],['home','Trang chủ','home'],['map','Bản đồ','map'],['roadmap','Lộ trình','path'],
  ['h','Luyện tập'],['cards','Ôn thẻ','cards'],['practice','Luyện câu hỏi','target'],['exam','Thi thử','exam'],
- ['h','Tài nguyên'],['labs','Lab','flask'],['ref','Tra cứu','book']
+ ['h','Tài nguyên'],['labs','Lab','flask'],['ref','Tra cứu','book'],['backup','Sao lưu tiến độ','cards']
 ];
 function curRoute(){ const h=(location.hash||'#home').slice(1); return h||'home'; }
 function navKey(r){ if(r.startsWith('lesson-')||r.startsWith('map')) return 'map'; if(r.startsWith('lab-')) return 'labs'; return r; }
@@ -1055,6 +1094,7 @@ function route(){
   if(r==='practice') return viewPractice(v);
   if(r==='cards') return viewCards(v);
   if(r==='exam') return viewExam(v);
+  if(r==='backup') return viewBackup(v);
   viewHome(v);
 }
 window.addEventListener('hashchange',route);
@@ -1322,6 +1362,40 @@ function openSearch(){
   draw(''); $('#gq').focus();
 }
 document.addEventListener('keydown',e=>{ if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){ e.preventDefault(); if(!document.querySelector('.modal')) openSearch(); } });
+
+/* ---------- backup ---------- */
+function viewBackup(v){
+  setTitle('Sao lưu tiến độ');
+  const done=Object.keys(S.done).filter(k=>LS[k]).length;
+  v.innerHTML=`<p class="muted" style="margin:0 0 16px;max-width:72ch">Tiến độ được lưu trong trình duyệt, nhưng trình duyệt có thể tự xóa (Safari dọn dữ liệu trang lâu không mở, tab ẩn danh, trình duyệt trong Zalo hay Messenger, đổi máy). Để tiến độ nằm trong git: tải file <span class="mono">progress.json</span> rồi đưa vào repo. Mỗi lần mở trang, trang tự đọc file đó và gộp với tiến độ đang có, không làm mất phần nào.</p>
+  <div class="grid g2">
+   <div class="card pad"><b>Tiến độ hiện tại</b>
+    <p style="margin:8px 0 4px">${S.xp} XP · cấp ${level()} · ${done}/${LESSONS.length} bài · ${Object.keys(S.labs).length}/${LABS.length} lab · ${S.exams.length} lần thi</p>
+    <p class="muted" style="font-size:13px;margin:0 0 14px">Lưu lần cuối: ${S.updatedAt?new Date(S.updatedAt).toLocaleString('vi-VN'):'chưa có'}<br>Đồng bộ với repo: ${esc(repoSync)}</p>
+    <div class="chips"><button class="btn pri" type="button" id="bdl">Tải progress.json</button><label class="btn" for="bup" style="cursor:pointer">Nhập từ file</label><input type="file" id="bup" accept="application/json,.json" hidden></div>
+    <p id="bmsg" class="muted" style="font-size:13px;margin:10px 0 0"></p></div>
+   <div class="card pad"><b>Đưa vào git</b>
+    <ol class="points" style="margin-top:10px;font-size:14px">
+     <li>Bấm <b>Tải progress.json</b>.</li>
+     <li>Chép file vào thư mục repo <span class="mono">backend</span>, cạnh <span class="mono">hanh-trinh-backend.html</span>, ghi đè file cũ.</li>
+     <li>Commit và push: <span class="mono">git add progress.json && git commit -m "Cập nhật tiến độ" && git push</span>. Hoặc trên GitHub: Add file → Upload files.</li>
+     <li>Đợi GitHub Pages cập nhật (thường 1–2 phút). Mở trang trên máy nào cũng tự nạp lại tiến độ.</li>
+    </ol>
+    <p class="muted" style="font-size:13px;margin:10px 0 0">Trang không tự commit được vì như vậy phải nhúng token GitHub vào trang, ai mở trang cũng lấy được token đó.</p></div>
+  </div>`;
+  $('#bdl').onclick=()=>{
+    try{
+      const blob=new Blob([JSON.stringify({...S,updatedAt:S.updatedAt||new Date().toISOString()},null,2)],{type:'application/json'});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='progress.json'; document.body.appendChild(a); a.click(); a.remove();
+      $('#bmsg').textContent='Đã tạo file progress.json. Nếu trình duyệt không tải về, hãy mở trang qua GitHub Pages thay vì trong khung xem trước.';
+    }catch(e){ $('#bmsg').textContent='Trình duyệt này không cho tải file.'; }
+  };
+  $('#bup').onchange=async e=>{
+    const f=e.target.files[0]; if(!f) return;
+    try{ const data=JSON.parse(await f.text()); S=Object.assign(S,mergeProgress(S,data)); save(); renderRail(); viewBackup(v); $('#bmsg').textContent='Đã gộp tiến độ từ file.'; }
+    catch(err){ $('#bmsg').textContent='File không đúng định dạng tiến độ.'; }
+  };
+}
 const seg = (name, opts, cur) => `<div class="seg" data-seg="${name}">${opts.map(o=>`<button type="button" data-v="${o[0]}" aria-pressed="${o[0]===cur}">${o[1]}</button>`).join('')}</div>`;
 function wireSeg(root, onChange){ root.querySelectorAll('[data-seg]').forEach(s=>s.querySelectorAll('button').forEach(b=>b.onclick=()=>{ s.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b)); onChange(s.dataset.seg,b.dataset.v); })); }
 const progLine = (id,n,need) => `<p class="muted" style="font-size:13px;margin:10px 0 0">Đã thử ${Math.min(n,need)}/${need} phương án${S.labs[id]?' · lab đã hoàn thành ✓':''}</p>`;
@@ -1642,5 +1716,7 @@ public void a() {
   draw();
  }}
 ];
-$("#sbtn").onclick=openSearch; route();
+$("#sbtn").onclick=openSearch; route(); syncFromRepo();
 </script>
+</body>
+</html>
